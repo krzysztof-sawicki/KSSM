@@ -14,15 +14,17 @@ import MeshConfig
 
 
 class MeshSim:
-	def __init__(self, nodes_data, width=5000, height=5000):
+	def __init__(self, nodes_data, width=5000, height=5000, csv_out_name = 'out.csv'):
 		self.width = width
 		self.height = height
 		self.nodes_data = nodes_data
 		self.nodes = []
 		self.nodes_by_id = {}
-		self.create_nodes()
+		self.csv_out_name = csv_out_name
 		self.current_time = 0
 		self.temp_directory = tempfile.mkdtemp(prefix='kssm')
+		
+		self.create_nodes()
 
 	def create_nodes(self):
 		for n in self.nodes_data:
@@ -31,7 +33,8 @@ class MeshSim:
 				position = n["position"],
 				tx_power = n["tx_power"],
 				neighbors = self.nodes,
-				debug = n["debug"]
+				debug = n["debug"],
+				csv_out_name = self.csv_out_name
 			)
 			print(node)
 			self.nodes.append(node)
@@ -159,9 +162,10 @@ if __name__ == "__main__":
 	time_resolution = MeshConfig.SIMULATION_INTERVAL
 	slowmo_factor = MeshConfig.SLOWMO_FACTOR
 	out_name = 'kssm.mp4'
+	csv_out_name = 'kssm.csv'
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "", ["simulation_time=", "time_resolution=", "out_name=", "slowmo_factor="])
+		opts, args = getopt.getopt(sys.argv[1:], "", ["simulation_time=", "time_resolution=", "out_name=", "slowmo_factor=", "csv_name="])
 	except getopt.GetoptError as err:
 		print(str(err))
 		sys.exit(2)
@@ -175,8 +179,10 @@ if __name__ == "__main__":
 			out_name = arg
 		elif opt == '--slowmo_factor':
 			slowmo_factor = int(arg)
+		elif opt == '--csv_name':
+			csv_out_name = arg
 
-	mesh_sim = MeshSim(nodes_data, width=6000, height=6000)
+	mesh_sim = MeshSim(nodes_data, width=6000, height=6000, csv_out_name = csv_out_name)
 	mesh_sim.plot_nodes()
 	for t in range((simulation_time * 1000000)//time_resolution):
 		mesh_sim.time_advance(time_resolution)

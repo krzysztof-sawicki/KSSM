@@ -3,7 +3,7 @@ import os
 from MeshMessage import MeshMessage
 
 class MeshMessageLogger:
-	def __init__(self, log_file_path="mesh_messages.csv"):
+	def __init__(self, log_file_path="out.csv"):
 		self.log_file_path = log_file_path
 		self.file_exists = os.path.isfile(self.log_file_path)
 

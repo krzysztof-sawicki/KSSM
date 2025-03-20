@@ -37,7 +37,7 @@ class MeshNode:
 				tx_power: int = 10, rx_sensitivity: float = -120,
 				frequency: float = 869.525e6, lora_mode: LoRaMode = LoRaMode.MEDIUM_FAST,
 				position_interval: int = 600000000, nodeinfo_interval: int = 600000000,
-				neighbors = None, debug = False):
+				neighbors = None, debug = False, csv_out_name = 'out.csv'):
 		"""
 		Initialize a Meshtastic network node
 
@@ -105,7 +105,7 @@ class MeshNode:
 		self.rx_start_time = None
 		self.backoff_start_time = None
 
-		self.message_logger = MeshMessageLogger()
+		self.message_logger = MeshMessageLogger(log_file_path = csv_out_name)
 
 	def summarize(self):
 		return str(self) + f"\nrx_time_sum = {self.rx_time_sum}\ntx_time_sum = {self.tx_time_sum}\nbackoff_time_sum = {self.backoff_time_sum}\ntx_origin = {self.tx_origin}\n"

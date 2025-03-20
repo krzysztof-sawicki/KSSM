@@ -21,27 +21,28 @@ This is a very early version. Many features are not well thought out yet. It may
 
 ## Usage example
 ```
-$ python3 kssm.py [--simulation_time=10] [--time_resolution=1000] [--out_name=kssm.mp4] [--slowmo_factor=5]
+$ python3 kssm.py [--simulation_time=10] [--time_resolution=1000] [--out_name=kssm.mp4] [--slowmo_factor=5] [--csv_name=file.csv]
 ```
 Options:
 - `--simulation_time=N` - length of the simulation in seconds,
 - `--time_resolution=N` - time between the events in microseconds,
 - `--out_name=out.mp4` - name of the output video file,
-- `--slowmo_factor=N` - slowdown factor of the output video file.
+- `--slowmo_factor=N` - slowdown factor of the output video file,
+- `--csv_name=file.csv` - name of the csv file with the messages history.
 
 ## TODO
-- [x] tx_time
-- [x] rx_time
-- [x] backoff_time
-- [x] tx_origin
-- [] node description in easy to edit format (json?)
-- [] number of collisions caused by the node
-- [] state-time plot
-- [] directional characteristics of antennas
-- [] separating the data link and network layer logic into separate methods
-- [] backoff calculation regarding the node role
-- [] repeater role
-- [] easy way to change propagation model
-- [] coexistence of nodes working on different frequencies and LoRa modem presets
+* [x] tx_time
+* [x] rx_time
+* [x] backoff_time
+* [x] tx_origin
+* [ ] node description in easy to edit format (json?)
+* [ ] number of collisions caused by the node
+* [ ] state-time plot
+* [ ] directional characteristics of antennas
+* [ ] separating the data link and network layer logic into separate methods
+* [ ] backoff calculation regarding the node role
+* [ ] repeater role
+* [ ] easy way to change propagation model
+* [ ] coexistence of nodes working on different frequencies and LoRa modem presets
 
 ![Example](example.gif)
