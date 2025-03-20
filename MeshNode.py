@@ -339,7 +339,7 @@ class MeshNode:
 		elif self.state == NodeState.RX_BUSY: # Check if we have any partially received messages that could be removed from the queue after a timeout
 			r_id = []
 			for n_id in self.currently_receiving:
-				if self.currently_receiving[n_id]["last_heard"] < self.current_time - MeshConfig.RX_TIMEOUT:
+				if self.currently_receiving[n_id]["last_heard"] < self.current_time - (MeshConfig.RX_TIMEOUT * step_interval):
 					self.debug("Removing rx message from the queue after timeout; from 0x{:08x}".format(n_id))
 					self.message_logger.log(self.currently_receiving[n_id]["message"], n_id, self.node_id, self.current_time, 0, int(self.currently_receiving[n_id]["collision"] > 0), 0)
 					r_id.append(n_id)

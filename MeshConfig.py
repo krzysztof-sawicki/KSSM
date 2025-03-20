@@ -1,7 +1,11 @@
+SIMULATION_INTERVAL	= 1000 # µs
+SIMULATION_TIME		= 10 # s
+SLOWMO_FACTOR		= 5 # every second of the simulation will be 5 times longer in the video
+
 CWMIN		= 20000
 CWMAX		= 500000
 
-RX_TIMEOUT	= 10000 #  µs, timeout to remove the receiving message from currently receiving list
+RX_TIMEOUT	= 3 # remove the message from the receiving queue after RX_TIMEOUT * SIMULATION_INTERVAL of no rx
 
 COLD_START_NODEINFO_MAX_DELAY = 6000000
 COLD_START_POSITION_MAX_DELAY = 6000000
@@ -14,6 +18,5 @@ POSITION_MAX_LEN = 70
 
 TEXT_MIN_LEN = 20
 TEXT_MAX_LEN = 100
-#TEXT_MESSAGE_LAMBDA = 5000000
 TEXT_MESSAGE_MIN_TIME = 2000000
 TEXT_MESSAGE_MAX_TIME = 20000000

@@ -10,6 +10,7 @@ import subprocess
 import matplotlib.pyplot as plt
 import numpy as np
 from MeshNode import MeshNode, NodeState
+import MeshConfig
 
 
 class MeshSim:
@@ -154,9 +155,9 @@ nodes_data = [
 
 if __name__ == "__main__":
 
-	simulation_time = 10	# seconds
-	time_resolution = 100	# microseconds
-	slowmo_factor = 5		# every second of the simulation will be 5 times longer in the video
+	simulation_time = MeshConfig.SIMULATION_TIME
+	time_resolution = MeshConfig.SIMULATION_INTERVAL
+	slowmo_factor = MeshConfig.SLOWMO_FACTOR
 	out_name = 'kssm.mp4'
 
 	try:
