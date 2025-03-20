@@ -96,6 +96,7 @@ class MeshNode:
 		self.rx_unicast = 0			#received messages with dest_addr == self.node_id
 		self.tx_done = 0			#transmitted messages
 		self.forwarded = 0			#forwarded messages
+		self.collisions_caused = 0	#number of collisions caused
 		self.tx_time_sum = 0		#time spent on tx
 		self.rx_time_sum = 0 		#time spent on rx
 		self.backoff_time_sum = 0	#time spent on backoff
@@ -107,8 +108,11 @@ class MeshNode:
 
 		self.message_logger = MeshMessageLogger(log_file_path = csv_out_name)
 
-	def summarize(self):
-		return str(self) + f"\nrx_time_sum = {self.rx_time_sum}\ntx_time_sum = {self.tx_time_sum}\nbackoff_time_sum = {self.backoff_time_sum}\ntx_origin = {self.tx_origin}\n"
+	def find_node_by_id(self, node_id):
+		for n in self.neighbors:
+			if n.node_id == node_id:
+				return n
+		return None
 
 	def update_position(self, new_position: tuple[float, float, float]):
 		"""Update node coordinates"""
@@ -185,12 +189,12 @@ class MeshNode:
 
 	def calculate_node_distance(self, node):
 		return math.sqrt((self.position[0] - node.position[0])**2 + (self.position[1] - node.position[1])**2 + (self.position[2] - node.position[2])**2)
-
+	
 	@cache
 	def calculate_urban_path_loss(self, distance: float) -> float:
 		path_loss_db = 20 * math.log10(self.frequency) + 30 * math.log10(distance) - 147.56
 		return round(path_loss_db, 2)
-
+	@cache
 	def calculate_theoretical_range(self, rx_sensitivity = -120):
 		exponent = (self.tx_power - rx_sensitivity + 147.56 - 20 * math.log10(self.frequency)) / 30
 		distance = 10 ** exponent
@@ -213,6 +217,8 @@ class MeshNode:
 					self.currently_receiving[informing_node.node_id]["rx_time"] += step_interval
 					self.currently_receiving[informing_node.node_id]["last_heard"] = self.current_time
 				else: # new message, adding to the queue
+					if len(self.currently_receiving) != 0: #new message, but still during receiving another one
+						self.find_node_by_id(informing_node.node_id).blame_collision()
 					self.currently_receiving[informing_node.node_id] = {"rx_time": step_interval, "message": message, "last_heard": self.current_time, "collision": 0}
 					self.change_state(NodeState.RX_BUSY)
 
@@ -243,7 +249,9 @@ class MeshNode:
 			pass
 		else:
 			self.debug("unknown state, informed by {:08x} about msg {:08x} distance: {:.2f} rssi {:.2f}".format(informing_node.node_id, message.message_id, distance, signal_rssi))
-
+	
+	def blame_collision(self):
+		self.collisions_caused += 1
 
 	def process_received_message(self, message, rssi = 0):
 		if message.message_id in self.messages_heard: #duplicate
@@ -364,8 +372,11 @@ class MeshNode:
 			ret += f" msg: {self.msg_tx_buffer.message_id:08x}"
 		ret += "\nin queue: {} ".format(self.message_queue.qsize())
 		ret += f"known_nodes: {len(self.known_nodes)}\n"
-		ret += f"rx_success: {self.rx_success}, rx_fail: {self.rx_fail}, rx_dups: {self.rx_dups}\ntx_done: {self.tx_done}, forwarded: {self.forwarded}"
+		ret += f"rx_success: {self.rx_success}, rx_fail: {self.rx_fail}, rx_dups: {self.rx_dups}\ntx_done: {self.tx_done}, forwarded: {self.forwarded}, collisions_caused: {self.collisions_caused}"
 		return ret
+	
+	def summarize(self):
+		return str(self) + f"\nrx_time_sum = {self.rx_time_sum}\ntx_time_sum = {self.tx_time_sum}\nbackoff_time_sum = {self.backoff_time_sum}\ntx_origin = {self.tx_origin}\n"
 
 	def color_from_state(self):
 		if self.state == NodeState.IDLE:

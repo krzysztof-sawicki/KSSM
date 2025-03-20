@@ -36,7 +36,7 @@ Options:
 * [x] backoff_time
 * [x] tx_origin
 * [ ] node description in easy to edit format (json?)
-* [ ] number of collisions caused by the node
+* [x] number of collisions caused by the node
 * [ ] state-time plot
 * [ ] directional characteristics of antennas
 * [ ] separating the data link and network layer logic into separate methods

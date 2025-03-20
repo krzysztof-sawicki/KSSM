@@ -48,7 +48,7 @@ class MeshSim:
 			if n.state_was_changed():
 				changedState = True
 
-		if changedState or self.current_time % 200000 == 0:
+		if changedState or self.current_time % 100000 == 0:
 			print("{:6d} ".format(self.current_time), end='')
 			for n in self.nodes:
 				print("{:12s} ".format(str(n.state)), end='')
@@ -134,7 +134,7 @@ class MeshSim:
 
 		ax.set_xlim(0, self.width)
 		ax.set_ylim(0, self.height)
-		ax.set_title(f't = {(time/1000):.03f} ms')
+		ax.set_title(f't = {(time/1000000):.06f} s')
 		ax.set_xlabel('X [m]')
 		ax.set_ylabel('Y [m]')
 		ax.grid(True)
