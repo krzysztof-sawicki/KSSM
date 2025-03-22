@@ -1,4 +1,5 @@
 import random
+from math import ceil
 from enum import Enum
 from LoRaConstants import *
 
@@ -84,8 +85,16 @@ class MeshMessage:
 		return self.dest_addr == self.BROADCAST_ADDR
 	
 	def calculate_tx_time(self):
+		# https://github.com/meshtastic/meshtastic/blob/master/static/documents/LoRa_Design_Guide.pdf
+		# 4 The LoRa Packet Format & Time On Air
+
 		symbol_length = 1000000*(2**self.ModemPreset["SF"] / self.ModemPreset["BW"])
-		data_symbols = 16 + (self.length * 8)/self.ModemPreset["SF"] #simplifed, 16 symbols of preamble, without LoRa header, FEC coding etc.
-		if data_symbols%1 > 0:
-			data_symbols = int(data_symbols)+1
-		self.tx_time = int(data_symbols*symbol_length)
+		low_data_rate_optimization = 1 if symbol_length > 16000 else 0 #when symbol_length > 16 ms
+		header_disabled = 0 #header is always added
+		cr = self.ModemPreset["CR"] - 4
+		
+		preamble_time = (16 + 4.25) * symbol_length
+		
+		payload_symbols = 8 + max(ceil(((8.0 * self.length - 4 * self.ModemPreset["SF"] + 28 + 16 - 20 * header_disabled) / (4 * (self.ModemPreset["SF"] - 2 * low_data_rate_optimization))) * cr), 0.0)
+		
+		self.tx_time = int(preamble_time + (payload_symbols * symbol_length))

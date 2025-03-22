@@ -17,19 +17,8 @@ This is a very early version. Many features are not well thought out yet. It may
 
 ## Details explained
 ### tx_time calculation
-The time needed to transmit a message over LoRa is calculated in the simplified way:
-	
-	def calculate_tx_time(self):
-		symbol_length = 1000000*(2**self.ModemPreset["SF"] / self.ModemPreset["BW"])
-		data_symbols = 16 + (self.length * 8)/self.ModemPreset["SF"]
-		if data_symbols%1 > 0:
-			data_symbols = int(data_symbols)+1
-		self.tx_time = int(data_symbols*symbol_length)
-
-The symbol_time is calculated with the formula [(source)](https://www.iotforall.com/everything-you-need-to-know-about-lora):
-$$ symbol\_time = \frac{2^{SF}}{BW} $$
-The *SF* value is the Spreading Factor used, the *BW* is the bandwidth of the signal. For *LONG_FAST* modem preset, the SF = 11, BW = 250000 Hz and symbol_time = 8192 µs. For *MEDIUM_FAST* modem preset, the SF= 9, BW = 250000 Hz and symbol_time = 2048 µs.
-The `calculate_tx_time` function adds 16 symbols of LoRa preamble [(source)](https://meshtastic.org/docs/overview/mesh-algo/) to the number of symbols needed to code the payload and multiplies the result by symbol_time. This function does not calculates FEC and ignores the LoRa header. It may change in the future.
+The time needed to transmit a message over LoRa is calculated with the method published in [Lora Modem Designer's Guide](https://github.com/meshtastic/meshtastic/blob/master/static/documents/LoRa_Design_Guide.pdf) and [Meshtastic source code](https://github.com/meshtastic/firmware/blob/1e4a0134e6ed6d455e54cd21f64232389280781b/src/mesh/RadioInterface.cpp#L201).
+For *LONG_FAST* modem preset, the SF = 11, BW = 250000 Hz and symbol_time = 8192 µs. For *MEDIUM_FAST* modem preset, the SF= 9, BW = 250000 Hz and symbol_time = 2048 µs.
 
 ## Requirements
 - ffmpeg,
