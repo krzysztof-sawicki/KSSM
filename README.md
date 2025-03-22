@@ -10,7 +10,7 @@ This is a very early version. Many features are not well thought out yet. It may
 ## Currently working features and their limitations
 - nodes are generating messages with very random lenght,
 - nodes can repeat messages,
-- simplified CSMA/CA algorithm, still not related to real values used by real Meshtastic nodes,
+- CSMA/CA algorithm, related to real values used by real Meshtastic nodes,
 - simple collision detection,
 - very simple propagation model,
 - output as mp4 and csv.
@@ -51,7 +51,7 @@ Options:
 * [ ] state-time plot
 * [ ] directional characteristics of antennas
 * [ ] separating the data link and network layer logic into separate methods
-* [ ] backoff calculation regarding the node role
+* [x] backoff calculation regarding the node role
 * [ ] repeater role
 * [ ] easy way to change propagation model
 * [ ] coexistence of nodes working on different frequencies and LoRa modem presets

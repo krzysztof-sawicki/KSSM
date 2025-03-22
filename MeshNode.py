@@ -123,12 +123,45 @@ class MeshNode:
 				return n
 		return None
 
+	def valmap(self, value, istart, istop, ostart, ostop):
+		if value > istop:
+			value = istop
+		elif value < istart:
+			value = istart
+		return int(round(ostart + (ostop - ostart) * ((value - istart) / (istop - istart)), 0))
+
 	@cache
 	def calculate_slot_time(self):
 		# https://github.com/meshtastic/firmware/blob/1e4a0134e6ed6d455e54cd21f64232389280781b/src/mesh/RadioInterface.cpp#L594
 		sum_propagation_turnaround_MAC_time = (0.2 + 0.4 + 7)*1000
 		symbol_time = 1000000 * (2**self.ModemPreset["SF"]/self.ModemPreset["BW"])
 		return 2.5 * symbol_time + sum_propagation_turnaround_MAC_time;
+	
+	def calculate_cwsize_from_snr(self, SNR):
+		# https://github.com/meshtastic/firmware/blob/1e4a0134e6ed6d455e54cd21f64232389280781b/src/mesh/RadioInterface.cpp#L259
+		return self.valmap(SNR, -20, 10, MeshConfig.CWmin, MeshConfig.CWmax);
+	
+	def calculate_backoff_time(self, rebroadcast = True, SNR = 0):
+		"""
+		Calculates the contention window (backoff time) regarding to:
+		- source of the message (we are the source or we just rebroadcasting the message),
+		- SNR of the received message,
+		- node role (CLIENT, ROUTER etc.),
+		- channel utilization (to be done; now is 5%)
+		"""
+		slot_time = self.calculate_slot_time()
+		
+		if rebroadcast == False:
+			# https://github.com/meshtastic/firmware/blob/1e4a0134e6ed6d455e54cd21f64232389280781b/src/mesh/RadioInterface.cpp#L247
+			CWsize = self.valmap(5, 0, 100, MeshConfig.CWmin, MeshConfig.CWmax);
+			return random.randint(0, 2**CWsize) * slot_time
+		else:
+			# https://github.com/meshtastic/firmware/blob/1e4a0134e6ed6d455e54cd21f64232389280781b/src/mesh/RadioInterface.cpp#L279
+			CWsize = self.calculate_cwsize_from_snr(SNR)
+			if self.role in [Role.ROUTER, Role.REPEATER]:
+				return random.randint(0, 2 * CWsize) * slot_time
+			else:
+				return (2 * MeshConfig.CWmax * slot_time) + random.randint(0, 2**CWsize) * slot_time;
 
 	def update_position(self, new_position: tuple[float, float, float]):
 		"""Update node coordinates"""
@@ -227,7 +260,7 @@ class MeshNode:
 		distance = self.calculate_node_distance(informing_node)
 		signal_rssi = informing_node.tx_power - self.calculate_urban_path_loss(distance)
 		signal_snr = signal_rssi - self.noise_level
-		self.debug(f"inform distance: {distance}\tsignal_rssi: {signal_rssi}\tsignal_snr: {signal_snr}")
+		#self.debug(f"inform distance: {distance}\tsignal_rssi: {signal_rssi}\tsignal_snr: {signal_snr}")
 		if self.state == NodeState.IDLE or self.state == NodeState.WAITING_TO_TX or self.state == NodeState.RX_BUSY:
 			if signal_snr > self.minimal_snr: # I am in the range of the transmitted message
 				#self.debug("informed by {:08x} about msg {:08x} distance: {:.2f} rssi {:.2f}".format(informing_node.node_id, message.message_id, distance, signal_rssi))
@@ -252,7 +285,7 @@ class MeshNode:
 						if self.currently_receiving[informing_node.node_id]["message"].sender_addr not in self.known_nodes: #new node to the list of known nodes
 							self.known_nodes.append(self.currently_receiving[informing_node.node_id]["message"].sender_addr)
 						self.message_logger.log(self.currently_receiving[informing_node.node_id]["message"], informing_node.node_id, self.node_id, self.current_time, signal_rssi, signal_snr, 0, 1)
-						self.process_received_message(copy.deepcopy(self.currently_receiving[informing_node.node_id]["message"]), signal_rssi)
+						self.process_received_message(copy.deepcopy(self.currently_receiving[informing_node.node_id]["message"]), signal_rssi, signal_snr)
 					else: # the collision happened during message receiving
 						self.message_logger.log(self.currently_receiving[informing_node.node_id]["message"], informing_node.node_id, self.node_id, self.current_time, signal_rssi, signal_snr, 1, 1)
 						self.rx_fail += 1
@@ -271,13 +304,12 @@ class MeshNode:
 	def blame_collision(self):
 		self.collisions_caused += 1
 
-	def process_received_message(self, message, rssi = 0):
+	def process_received_message(self, message, rssi = 0, snr = 0):
 		if message.message_id in self.messages_heard: #duplicate
 			self.messages_heard[message.message_id]["count"] += 1
 			self.rx_dups += 1
 		else: # heard for the first time
-			self.messages_heard[message.message_id] = {"count": 1, "rssi": rssi}
-
+			self.messages_heard[message.message_id] = {"count": 1, "rssi": rssi, "snr": snr}
 			if message.dest_addr == self.node_id: # we are the destination
 				self.rx_unicast += 1
 			elif message.hop_limit > 0:
@@ -330,18 +362,19 @@ class MeshNode:
 		if self.state == NodeState.IDLE and self.msg_tx_buffer is None:
 			try:
 				self.msg_tx_buffer = self.message_queue.get(block=False)
+				rebroadcast = (self.msg_tx_buffer.sender_addr == self.node_id)
+				r_snr = 0
+				if self.msg_tx_buffer.message_id in self.messages_heard:
+					r_snr = self.messages_heard[self.msg_tx_buffer.message_id]["snr"]
 				if (not self.is_unconditional_forwarder()) and self.msg_tx_buffer.message_id in self.messages_heard and self.messages_heard[self.msg_tx_buffer.message_id]["count"] > 1:
 					self.debug(f"message {self.msg_tx_buffer.message_id:08x} dropped, because heard twice or more")
 					self.msg_tx_buffer = None
 				else:
 					if self.msg_tx_buffer.sender_addr != self.node_id:
 						self.forwarded += 1
-					if self.role not in [Role.ROUTER, Role.REPEATER, Role.ROUTER_CLIENT]:
-						self.backoff_time = random.randint(MeshConfig.CLIENT_CWmin, MeshConfig.CLIENT_CWmax+1) * self.calculate_slot_time()
-					else:
-						self.backoff_time = random.randint(MeshConfig.ROUTER_CWmin, MeshConfig.ROUTER_CWmax+1) * self.calculate_slot_time()
+					self.backoff_time = self.calculate_backoff_time(rebroadcast = rebroadcast, SNR = r_snr)
 					self.change_state(NodeState.WAITING_TO_TX)
-					#self.debug(f"Backoff: {self.backoff_time} µs")
+					self.debug(f"Backoff: {self.backoff_time} µs")
 			except queue.Empty:
 				pass
 		elif self.state == NodeState.WAITING_TO_TX and self.msg_tx_buffer is not None:

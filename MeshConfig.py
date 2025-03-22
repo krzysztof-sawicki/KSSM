@@ -2,11 +2,8 @@ SIMULATION_INTERVAL	= 1000 # µs
 SIMULATION_TIME		= 10 # s
 SLOWMO_FACTOR		= 5 # every second of the simulation will be 5 times longer in the video
 
-CLIENT_CWmin		= 3		# https://github.com/meshtastic/firmware/blob/1e4a0134e6ed6d455e54cd21f64232389280781b/src/mesh/RadioInterface.h#L95
-CLIENT_CWmax		= 8
-
-ROUTER_CWmin 		= 0		# https://github.com/meshtastic/firmware/blob/1e4a0134e6ed6d455e54cd21f64232389280781b/src/mesh/RadioInterface.cpp#L286
-ROUTER_CWmax		= 2
+CWmin		= 3		# https://github.com/meshtastic/firmware/blob/1e4a0134e6ed6d455e54cd21f64232389280781b/src/mesh/RadioInterface.h#L95
+CWmax		= 8
 
 RX_TIMEOUT	= 3 # remove the message from the receiving queue after RX_TIMEOUT * SIMULATION_INTERVAL of no rx
 
