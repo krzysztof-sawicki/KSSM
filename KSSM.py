@@ -6,17 +6,18 @@ import sys
 import getopt
 import glob
 import re
+import json
 import subprocess
 import matplotlib.pyplot as plt
 import numpy as np
-from MeshNode import MeshNode, NodeState
+from MeshNode import MeshNode, NodeState, Role
+import LoRaConstants
 import MeshConfig
 
 
 class MeshSim:
-	def __init__(self, nodes_data, width=5000, height=5000, csv_out_name = 'out.csv'):
-		self.width = width
-		self.height = height
+	def __init__(self, nodes_data, size = (0, 1000, 0, 1000), csv_out_name = 'out.csv'):
+		self.size = size # x_min, x_max, y_min, y_max
 		self.nodes_data = nodes_data
 		self.nodes = []
 		self.nodes_by_id = {}
@@ -28,17 +29,39 @@ class MeshSim:
 
 	def create_nodes(self):
 		for n in self.nodes_data:
+			role = Role.CLIENT
+			lora_mode = LoRaConstants.LoRaMode.MEDIUM_FAST
+			if "role" in n.keys():
+				if n["role"] == 'ROUTER':
+					role = Role.ROUTER
+				elif n["role"] == 'CLIENT_MUTE':
+					role = Role.CLIENT_MUTE
+				elif n["role"] == 'ROUTER_CLIENT':
+					role = Role.ROUTER_CLIENT
+			if "lora_mode" in n.keys():
+				if n["lora_mode"] == 'MediumFast':
+					lora_mode = LoRaConstants.LoRaMode.MEDIUM_FAST
+				elif n["lora_mode"] == 'LongFast':
+					lora_mode = LoRaConstants.LoRaMode.LONG_FAST
+			node_id = int(n["node_id"], 16) & 0xffffffff
 			node = MeshNode(
-				node_id = n["node_id"],
+				node_id = node_id,
+				long_name = n["long_name"],
 				position = n["position"],
 				tx_power = n["tx_power"],
+				noise_level = n["noise_level"],
+				frequency = n["frequency"],
+				lora_mode = lora_mode,
+				nodeinfo_interval = n["nodeinfo_interval"] * 1000000,
+				position_interval = n["position_interval"] * 1000000,
 				neighbors = self.nodes,
 				debug = n["debug"],
+				role = role,
 				csv_out_name = self.csv_out_name
 			)
 			print(node)
 			self.nodes.append(node)
-			self.nodes_by_id[n["node_id"]] = node
+			self.nodes_by_id[node_id] = node
 
 	def time_advance(self, step_interval = 1000): #step interval in microseconds
 		self.current_time += step_interval
@@ -132,8 +155,8 @@ class MeshSim:
 					linewidth=1)
 				ax.add_artist(circle)
 
-		ax.set_xlim(0, self.width)
-		ax.set_ylim(0, self.height)
+		ax.set_xlim(self.size[0], self.size[1])
+		ax.set_ylim(self.size[2], self.size[3])
 		ax.set_title(f't = {(time/1000000):.06f} s')
 		ax.set_xlabel('X [m]')
 		ax.set_ylabel('Y [m]')
@@ -142,22 +165,10 @@ class MeshSim:
 		plt.savefig("{}/{:010d}.png".format(self.temp_directory, time), dpi=96)
 		plt.close()
 
-
-nodes_data = [
-	{"node_id": 0xdeadbeef, "position": (1000, 1000, 10), "tx_power": 12, "debug": True},
-	{"node_id": 0xcafebabe, "position": (2000, 2500, 10), "tx_power": 12, "debug": True},
-	{"node_id": 0x10101010, "position": (1000, 3000, 10), "tx_power": 12, "debug": True},
-	{"node_id": 0xaaaaaaaa, "position": (3000, 4000, 10), "tx_power": 12, "debug": True},
-	{"node_id": 0xc0c0c0c0, "position": (4000, 5000, 10), "tx_power": 12, "debug": True},
-	{"node_id": 0xab00ab00, "position": (5500, 5500, 10), "tx_power": 12, "debug": True},
-	{"node_id": 0xb22ff000, "position": (1000,  500, 10), "tx_power": 12, "debug": True},
-	{"node_id": 0x82ab92aa, "position": (4000, 2000, 10), "tx_power": 12, "debug": True},
-	{"node_id": 0x10005000, "position": (1000, 5000, 10), "tx_power": 14, "debug": True},
-]
-
-
 if __name__ == "__main__":
 
+	nodes_data = None
+	nodes_data_file = None
 	simulation_time = MeshConfig.SIMULATION_TIME
 	time_resolution = MeshConfig.SIMULATION_INTERVAL
 	slowmo_factor = MeshConfig.SLOWMO_FACTOR
@@ -165,13 +176,15 @@ if __name__ == "__main__":
 	csv_out_name = 'kssm.csv'
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "", ["simulation_time=", "time_resolution=", "out_name=", "slowmo_factor=", "csv_name="])
+		opts, args = getopt.getopt(sys.argv[1:], "", ["nodes_data=", "simulation_time=", "time_resolution=", "out_name=", "slowmo_factor=", "csv_name="])
 	except getopt.GetoptError as err:
 		print(str(err))
 		sys.exit(2)
 
 	for opt, arg in opts:
-		if opt == '--simulation_time':
+		if opt == '--nodes_data':
+			nodes_data_file = arg
+		elif opt == '--simulation_time':
 			simulation_time = int(arg)
 		elif opt == '--time_resolution':
 			time_resolution = int(arg)
@@ -181,10 +194,31 @@ if __name__ == "__main__":
 			slowmo_factor = int(arg)
 		elif opt == '--csv_name':
 			csv_out_name = arg
-
-	mesh_sim = MeshSim(nodes_data, width=6000, height=6000, csv_out_name = csv_out_name)
-	mesh_sim.plot_nodes()
-	for t in range((simulation_time * 1000000)//time_resolution):
-		mesh_sim.time_advance(time_resolution)
-	mesh_sim.print_summary()
-	mesh_sim.make_video(out_name, slowmo_factor)
+	
+	with open(nodes_data_file, 'r') as f:
+		nodes_data = json.load(f)
+		x_min, x_max, y_min, y_max = None, None, None, None
+		for n in nodes_data:
+			if "position" not in n.keys():
+				n["position"] = (0,0,0)
+			if x_min is None or x_min > n["position"][0]:
+				x_min = n["position"][0]
+			if x_max is None or x_max < n["position"][0]:
+				x_max = n["position"][0]
+			if y_min is None or y_min > n["position"][1]:
+				y_min = n["position"][1]
+			if y_max is None or y_max < n["position"][1]:
+				y_max = n["position"][1]
+		x_r = x_max - x_min
+		y_r = y_max - y_min
+		x_min -= int(0.2*x_r)
+		x_max += int(0.2*x_r)
+		y_min -= int(0.2*y_r)
+		y_max += int(0.2*y_r)
+		
+		mesh_sim = MeshSim(nodes_data, size = (x_min, x_max, y_min, y_max), csv_out_name = csv_out_name)
+		mesh_sim.plot_nodes()
+		for t in range((simulation_time * 1000000)//time_resolution):
+			mesh_sim.time_advance(time_resolution)
+		mesh_sim.print_summary()
+		mesh_sim.make_video(out_name, slowmo_factor)

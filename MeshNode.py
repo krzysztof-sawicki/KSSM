@@ -39,24 +39,28 @@ class NodeState(enum.Enum):
 		return self.name
 
 class MeshNode:
-	def __init__(self, node_id: int = None, role: Role = Role.CLIENT,
-				position: tuple[float, float, float] = (0, 0, 10),
+	def __init__(self, node_id: int = None, long_name: str = None, 
+				role: Role = Role.CLIENT, position: tuple[float, float, float] = (0, 0, 10),
 				tx_power: int = 10, noise_level: float = -100,
 				frequency: float = 869.525e6, lora_mode: LoRaMode = LoRaMode.MEDIUM_FAST,
 				position_interval: int = 600000000, nodeinfo_interval: int = 600000000,
+				text_message_min_interval: int = 2000000, text_message_max_interval: int = 12000000,
 				neighbors = None, debug = False, csv_out_name = 'out.csv'):
 		"""
 		Initialize a Meshtastic network node
 
 		:param node_id: 32-bit node identifier (randomly generated if None)
+		:param long_name: Node long name, node's hexadecimal id if not provided
 		:param role: Node role in network (default CLIENT)
 		:param position: Tuple (x, y, z) with coordinates in meters
 		:param tx_power: Transmission power in dBm (default 10)
 		:param noise_level: background noise level in dBm (default -100)
-		:param frequency: Operating frequency in MHz (default 869.525)
+		:param frequency: Operating frequency in Hz (default 869525000)
 		:param lora_mode: LoRa modem operation mode (default MediumFast)
-		:param position_interval: Position packet broadcast interval in seconds
-		:param nodeinfo_interval: NodeInfo packet broadcast interval in seconds
+		:param position_interval: Position packet broadcast interval in µs
+		:param nodeinfo_interval: NodeInfo packet broadcast interval in µs
+		:param text_message_min_interval: minimal time before new text message is generated in µs
+		:param text_message_max_interval: maximal time before new text message is generated in µs
 		:param neighbors: List of other nodes in the simulated environment
 		"""
 		# Generate random 32-bit node ID if not provided
@@ -64,6 +68,11 @@ class MeshNode:
 			self.node_id = random.randint(0, 0xFFFFFFFF)
 		else:
 			self.node_id = node_id & 0xFFFFFFFF  # Ensure 32-bit value
+		
+		if long_name is None:
+			self.long_name = f"!{self.node_id:08x}"
+		else:
+			self.long_name = str(long_name)
 
 		self.role = role
 		self.position = position  # Store the complete position tuple
@@ -80,6 +89,9 @@ class MeshNode:
 
 		self.last_nodeinfo_time = -self.nodeinfo_interval + random.randint(0, MeshConfig.COLD_START_NODEINFO_MAX_DELAY)
 		self.last_position_time = -self.position_interval + random.randint(0, MeshConfig.COLD_START_POSITION_MAX_DELAY)
+		
+		self.text_message_min_interval = text_message_min_interval
+		self.text_message_max_interval = text_message_max_interval
 		self.last_text_time = 0
 
 		self.current_time = 0
@@ -340,13 +352,11 @@ class MeshNode:
 					self.debug("queue full, message dropped")
 		# generate text message with Poisson distribution
 		if self.last_text_time == 0:
-			#self.last_text_time = numpy.random.poisson(MeshConfig.TEXT_MESSAGE_LAMBDA)
-			self.last_text_time = random.randint(MeshConfig.TEXT_MESSAGE_MIN_TIME, MeshConfig.TEXT_MESSAGE_MAX_TIME)
+			self.last_text_time = random.randint(self.text_message_min_interval, self.text_message_max_interval)
 		if self.current_time > self.last_text_time:
 			l = random.randint(MeshConfig.NODEINFO_MIN_LEN, MeshConfig.NODEINFO_MAX_LEN)
 			message = MeshMessage(random.randint(MeshConfig.TEXT_MIN_LEN, MeshConfig.TEXT_MAX_LEN), message_type = MessageType.TEXT, sender_addr = self.node_id, ModemPreset = self.ModemPreset)
-			#self.last_text_time += numpy.random.poisson(MeshConfig.TEXT_MESSAGE_LAMBDA)
-			self.last_text_time += random.randint(MeshConfig.TEXT_MESSAGE_MIN_TIME, MeshConfig.TEXT_MESSAGE_MAX_TIME)
+			self.last_text_time += random.randint(self.text_message_min_interval,self.text_message_max_interval)
 			try:
 				self.message_queue.put(message, block = False)
 				self.tx_origin += 1

@@ -1,0 +1,47 @@
+[
+	{
+		"node_id": "0xdeadbeef",
+		"long_name": "Node 1",
+		"position": [1000, 1000, 10],
+		"tx_power": 12,
+		"noise_level": -95,
+		"frequency": 869525000,
+		"lora_mode": "MediumFast",
+		"role": "CLIENT",
+		"position_interval": 600,
+		"nodeinfo_interval": 600,
+		"text_message_min_interval": 2,
+		"text_message_max_interval": 12,
+		"debug": true
+	},
+	{
+		"node_id": "0xcafebabe",
+		"long_name": "Node 2",
+		"position": [2000, 2500, 10 ],
+		"tx_power": 12,
+		"noise_level": -105,
+		"frequency": 869525000,
+		"lora_mode": "MediumFast",
+		"role": "CLIENT",
+		"position_interval": 600,
+		"nodeinfo_interval": 600,
+		"text_message_min_interval": 2,
+		"text_message_max_interval": 12,
+		"debug": true
+	},
+	{
+		"node_id": "0xfafac0c0",
+		"long_name": "Node 3",
+		"position": [4000, 1500, 10 ],
+		"tx_power": 12,
+		"noise_level": -100,
+		"frequency": 869525000,
+		"lora_mode": "MediumFast",
+		"role": "CLIENT",
+		"position_interval": 600,
+		"nodeinfo_interval": 600,
+		"text_message_min_interval": 2,
+		"text_message_max_interval": 12,
+		"debug": true
+	}
+]

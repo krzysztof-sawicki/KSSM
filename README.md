@@ -32,9 +32,10 @@ The SNR is calculated with the formula: $ SNR = P_{signal} - P_{noise} $ where $
 
 ## Usage example
 ```
-$ python3 kssm.py [--simulation_time=10] [--time_resolution=1000] [--out_name=kssm.mp4] [--slowmo_factor=5] [--csv_name=file.csv]
+$ python3 kssm.py --nodes_data=nodes.json [--simulation_time=10] [--time_resolution=1000] [--out_name=kssm.mp4] [--slowmo_factor=5] [--csv_name=file.csv]
 ```
 Options:
+- `--nodes_data=nodes.json` - JSON file with description about nodes, the example JSON structure is in `examples` directory,
 - `--simulation_time=N` - length of the simulation in seconds,
 - `--time_resolution=N` - time between the events in microseconds,
 - `--out_name=out.mp4` - name of the output video file,
@@ -46,7 +47,7 @@ Options:
 * [x] rx_time
 * [x] backoff_time
 * [x] tx_origin
-* [ ] node description in easy to edit format (json?)
+* [x] node description in easy to edit format (json?)
 * [x] number of collisions caused by the node
 * [ ] state-time plot
 * [ ] directional characteristics of antennas
