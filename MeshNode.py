@@ -8,19 +8,26 @@ import numpy.random
 from functools import cache
 from MeshMessage import MeshMessage, MessageType
 import MeshConfig
+from LoRaConstants import *
 from MeshMessageLogger import MeshMessageLogger
 
+"""
+Node Role, values taken from:
+https://github.com/meshtastic/protobufs/blob/14ec205865592fcfa798065bb001a549fc77b438/meshtastic/config.proto#L21
+"""
 class Role(enum.Enum):
-	CLIENT = "CLIENT"
-	CLIENT_MUTE = "CLIENT_MUTE"
-	ROUTER = "ROUTER"
-	ROUTER_LATE = "ROUTER_LATE"
-	REPEATER = "REPEATER"
-
-class LoRaMode(enum.Enum):
-	MEDIUM_FAST = "MediumFast"
-	LONG_FAST = "LongFast"
-	SHORT_FAST = "ShortFast"
+	CLIENT = 0
+	CLIENT_MUTE = 1
+	ROUTER = 2
+	ROUTER_CLIENT = 3
+	REPEATER = 4
+	TRACKER = 5
+	SENSOR = 6
+	TAK = 7
+	CLIENT_HIDDEN = 8
+	LOST_AND_FOUND = 9
+	TAK_TRACKER = 10
+	ROUTER_LATE = 11
 
 class NodeState(enum.Enum):
 	IDLE = 0
@@ -68,6 +75,7 @@ class MeshNode:
 		self.position_interval = position_interval
 		self.nodeinfo_interval = nodeinfo_interval
 		self.debugMask = debug
+		self.ModemPreset = ModemPreset.params[int(self.lora_mode)]
 
 		self.last_nodeinfo_time = -self.nodeinfo_interval + random.randint(0, MeshConfig.COLD_START_NODEINFO_MAX_DELAY)
 		self.last_position_time = -self.position_interval + random.randint(0, MeshConfig.COLD_START_POSITION_MAX_DELAY)
@@ -189,7 +197,7 @@ class MeshNode:
 
 	def calculate_node_distance(self, node):
 		return math.sqrt((self.position[0] - node.position[0])**2 + (self.position[1] - node.position[1])**2 + (self.position[2] - node.position[2])**2)
-	
+
 	@cache
 	def calculate_urban_path_loss(self, distance: float) -> float:
 		path_loss_db = 20 * math.log10(self.frequency) + 30 * math.log10(distance) - 147.56
@@ -249,7 +257,7 @@ class MeshNode:
 			pass
 		else:
 			self.debug("unknown state, informed by {:08x} about msg {:08x} distance: {:.2f} rssi {:.2f}".format(informing_node.node_id, message.message_id, distance, signal_rssi))
-	
+
 	def blame_collision(self):
 		self.collisions_caused += 1
 
@@ -277,10 +285,10 @@ class MeshNode:
 			message = None
 			if self.last_nodeinfo_time is None or self.current_time/1000 > self.last_nodeinfo_time + self.nodeinfo_interval:
 				l = random.randint(MeshConfig.NODEINFO_MIN_LEN, MeshConfig.NODEINFO_MAX_LEN)
-				message = MeshMessage(l, message_type = MessageType.NODEINFO, sender_addr = self.node_id)
+				message = MeshMessage(l, message_type = MessageType.NODEINFO, sender_addr = self.node_id, ModemPreset = self.ModemPreset)
 			elif self.last_position_time is None or self.current_time/1000 > self.last_position_time + self.position_interval:
 				l = random.randint(MeshConfig.POSITION_MIN_LEN, MeshConfig.POSITION_MAX_LEN)
-				message = MeshMessage(l, message_type = MessageType.POSITION, sender_addr = self.node_id)
+				message = MeshMessage(l, message_type = MessageType.POSITION, sender_addr = self.node_idm, ModemPreset = self.ModemPreset)
 			if message:
 				try:
 					self.message_queue.put(message, block = False)
@@ -294,7 +302,7 @@ class MeshNode:
 			self.last_text_time = random.randint(MeshConfig.TEXT_MESSAGE_MIN_TIME, MeshConfig.TEXT_MESSAGE_MAX_TIME)
 		if self.current_time > self.last_text_time:
 			l = random.randint(MeshConfig.NODEINFO_MIN_LEN, MeshConfig.NODEINFO_MAX_LEN)
-			message = MeshMessage(random.randint(MeshConfig.TEXT_MIN_LEN, MeshConfig.TEXT_MAX_LEN), message_type = MessageType.TEXT, sender_addr = self.node_id)
+			message = MeshMessage(random.randint(MeshConfig.TEXT_MIN_LEN, MeshConfig.TEXT_MAX_LEN), message_type = MessageType.TEXT, sender_addr = self.node_id, ModemPreset = self.ModemPreset)
 			#self.last_text_time += numpy.random.poisson(MeshConfig.TEXT_MESSAGE_LAMBDA)
 			self.last_text_time += random.randint(MeshConfig.TEXT_MESSAGE_MIN_TIME, MeshConfig.TEXT_MESSAGE_MAX_TIME)
 			try:
@@ -374,7 +382,7 @@ class MeshNode:
 		ret += f"known_nodes: {len(self.known_nodes)}\n"
 		ret += f"rx_success: {self.rx_success}, rx_fail: {self.rx_fail}, rx_dups: {self.rx_dups}\ntx_done: {self.tx_done}, forwarded: {self.forwarded}, collisions_caused: {self.collisions_caused}"
 		return ret
-	
+
 	def summarize(self):
 		return str(self) + f"\nrx_time_sum = {self.rx_time_sum}\ntx_time_sum = {self.tx_time_sum}\nbackoff_time_sum = {self.backoff_time_sum}\ntx_origin = {self.tx_origin}\n"
 

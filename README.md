@@ -1,4 +1,5 @@
-# KSSM - Yet Another Mesh network Simulator (🇵🇱 Kolejny Symulator Sieci Mesh)
+# KSSM - Yet Another Mesh network Simulator 
+## 🇵🇱 Kolejny Symulator Sieci Mesh
 
 KSSM is yet another mesh network simulator, but its goal is to demonstrate how mesh networks work. KSSM tries to imitate [Meshtastic network](https://meshtastic.org/).
 
@@ -13,6 +14,22 @@ This is a very early version. Many features are not well thought out yet. It may
 - simple collision detection,
 - very simple propagation model,
 - output as mp4 and csv.
+
+## Details explained
+### tx_time calculation
+The time needed to transmit a message over LoRa is calculated in the simplified way:
+	
+	def calculate_tx_time(self):
+		symbol_length = 1000000*(2**self.ModemPreset["SF"] / self.ModemPreset["BW"])
+		data_symbols = 16 + (self.length * 8)/self.ModemPreset["SF"]
+		if data_symbols%1 > 0:
+			data_symbols = int(data_symbols)+1
+		self.tx_time = int(data_symbols*symbol_length)
+
+The symbol_time is calculated with the formula [(source)](https://www.iotforall.com/everything-you-need-to-know-about-lora):
+$$ symbol\_time = \frac{2^{SF}}{BW} $$
+The *SF* value is the Spreading Factor used, the *BW* is the bandwidth of the signal. For *LONG_FAST* modem preset, the SF = 11, BW = 250000 Hz and symbol_time = 8192 µs. For *MEDIUM_FAST* modem preset, the SF= 9, BW = 250000 Hz and symbol_time = 2048 µs.
+The `calculate_tx_time` function adds 16 symbols of LoRa preamble [(source)](https://meshtastic.org/docs/overview/mesh-algo/) to the number of symbols needed to code the payload and multiplies the result by symbol_time. This function does not calculates FEC and ignores the LoRa header. It may change in the future.
 
 ## Requirements
 - ffmpeg,
@@ -46,3 +63,4 @@ Options:
 * [ ] coexistence of nodes working on different frequencies and LoRa modem presets
 
 ![Example](example.gif)
+

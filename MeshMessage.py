@@ -1,5 +1,6 @@
 import random
 from enum import Enum
+from LoRaConstants import *
 
 class MessageType(Enum):
 	"""Enum representing different types of Meshtastic messages."""
@@ -16,7 +17,7 @@ class MeshMessage:
 	# Broadcast address
 	BROADCAST_ADDR = 0xffffffff
 	
-	def __init__(self, length, message_type=MessageType.TEXT, message_id=None, hop_start=3, sender_addr=None, dest_addr=BROADCAST_ADDR):
+	def __init__(self, length, message_type=MessageType.TEXT, message_id=None, hop_start=3, sender_addr=None, dest_addr=BROADCAST_ADDR, ModemPreset = ModemPreset.params[int(LoRaMode.MEDIUM_FAST)]):
 		"""
 		Initialize a MeshMessage object.
 		
@@ -65,6 +66,8 @@ class MeshMessage:
 			raise ValueError("Destination address must be a 32-bit integer (0 to 4294967295)")
 		self.dest_addr = dest_addr
 		
+		self.ModemPreset = ModemPreset
+		
 		self.calculate_tx_time()
 	
 	def __str__(self):
@@ -81,7 +84,8 @@ class MeshMessage:
 		return self.dest_addr == self.BROADCAST_ADDR
 	
 	def calculate_tx_time(self):
-		#@TODO
-		sym_len = 2048 #µs, MediumFast
-		blen = 16 + (self.length * 8)//11
-		self.tx_time = int(blen*sym_len)
+		symbol_length = 1000000*(2**self.ModemPreset["SF"] / self.ModemPreset["BW"])
+		data_symbols = 16 + (self.length * 8)/self.ModemPreset["SF"] #simplifed, 16 symbols of preamble, without LoRa header, FEC coding etc.
+		if data_symbols%1 > 0:
+			data_symbols = int(data_symbols)+1
+		self.tx_time = int(data_symbols*symbol_length)
