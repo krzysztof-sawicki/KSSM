@@ -41,7 +41,7 @@ class NodeState(enum.Enum):
 class MeshNode:
 	def __init__(self, node_id: int = None, role: Role = Role.CLIENT,
 				position: tuple[float, float, float] = (0, 0, 10),
-				tx_power: int = 10, rx_sensitivity: float = -120,
+				tx_power: int = 10, noise_level: float = -100,
 				frequency: float = 869.525e6, lora_mode: LoRaMode = LoRaMode.MEDIUM_FAST,
 				position_interval: int = 600000000, nodeinfo_interval: int = 600000000,
 				neighbors = None, debug = False, csv_out_name = 'out.csv'):
@@ -52,7 +52,7 @@ class MeshNode:
 		:param role: Node role in network (default CLIENT)
 		:param position: Tuple (x, y, z) with coordinates in meters
 		:param tx_power: Transmission power in dBm (default 10)
-		:param rx_sensitivity: Receiver sensitivity in dBm (default -120)
+		:param noise_level: background noise level in dBm (default -100)
 		:param frequency: Operating frequency in MHz (default 869.525)
 		:param lora_mode: LoRa modem operation mode (default MediumFast)
 		:param position_interval: Position packet broadcast interval in seconds
@@ -69,13 +69,14 @@ class MeshNode:
 		self.position = position  # Store the complete position tuple
 		self.x, self.y, self.z = position  # Unpack for easy access
 		self.tx_power = tx_power
-		self.rx_sensitivity = rx_sensitivity
+		self.noise_level = noise_level
 		self.frequency = frequency
 		self.lora_mode = lora_mode
 		self.position_interval = position_interval
 		self.nodeinfo_interval = nodeinfo_interval
 		self.debugMask = debug
 		self.ModemPreset = ModemPreset.params[int(self.lora_mode)]
+		self.minimal_snr = -20 #I should do it better in the future :-)
 
 		self.last_nodeinfo_time = -self.nodeinfo_interval + random.randint(0, MeshConfig.COLD_START_NODEINFO_MAX_DELAY)
 		self.last_position_time = -self.position_interval + random.randint(0, MeshConfig.COLD_START_POSITION_MAX_DELAY)
@@ -146,16 +147,14 @@ class MeshNode:
 		"""Set a new 32-bit node identifier"""
 		self.node_id = new_id & 0xFFFFFFFF  # Ensure 32-bit value
 
-	def set_rx_sensitivity(self, sensitivity: float):
-		"""Set receiver sensitivity in dBm"""
-		self.rx_sensitivity = sensitivity
+	def set_noise_level(self, noise_level: float):
+		"""Set background noise level in dBm"""
+		self.noise_level = noise_level
 
 	def validate_settings(self):
 		"""Verify configuration validity"""
 		if self.tx_power < -10 or self.tx_power > 30:
 			raise ValueError("Invalid TX power (range -10..30 dBm)")
-		if self.rx_sensitivity > -70 or self.rx_sensitivity < -140:
-			raise ValueError("Invalid receiver sensitivity (range -140..-70 dBm)")
 		if self.frequency < 150 or self.frequency > 960:
 			raise ValueError("Invalid frequency (range 150-960 MHz)")
 		if not (0 <= self.node_id <= 0xFFFFFFFF):
@@ -213,8 +212,8 @@ class MeshNode:
 		path_loss_db = 20 * math.log10(self.frequency) + 30 * math.log10(distance) - 147.56
 		return round(path_loss_db, 2)
 	@cache
-	def calculate_theoretical_range(self, rx_sensitivity = -120):
-		exponent = (self.tx_power - rx_sensitivity + 147.56 - 20 * math.log10(self.frequency)) / 30
+	def calculate_theoretical_range(self, minimal_rx_rssi = -120):
+		exponent = (self.tx_power - minimal_rx_rssi + 147.56 - 20 * math.log10(self.frequency)) / 30
 		distance = 10 ** exponent
 		return distance
 
@@ -227,9 +226,10 @@ class MeshNode:
 	def inform(self, informing_node, message, step_interval):
 		distance = self.calculate_node_distance(informing_node)
 		signal_rssi = informing_node.tx_power - self.calculate_urban_path_loss(distance)
-		#self.debug(f"inform distance: {distance}\tsignal_rssi: {signal_rssi}")
+		signal_snr = signal_rssi - self.noise_level
+		self.debug(f"inform distance: {distance}\tsignal_rssi: {signal_rssi}\tsignal_snr: {signal_snr}")
 		if self.state == NodeState.IDLE or self.state == NodeState.WAITING_TO_TX or self.state == NodeState.RX_BUSY:
-			if signal_rssi > self.rx_sensitivity: # I am in the range of the transmitted message
+			if signal_snr > self.minimal_snr: # I am in the range of the transmitted message
 				#self.debug("informed by {:08x} about msg {:08x} distance: {:.2f} rssi {:.2f}".format(informing_node.node_id, message.message_id, distance, signal_rssi))
 				if informing_node.node_id in self.currently_receiving.keys(): # already in the queue
 					self.currently_receiving[informing_node.node_id]["rx_time"] += step_interval
@@ -251,10 +251,10 @@ class MeshNode:
 						self.rx_success += 1
 						if self.currently_receiving[informing_node.node_id]["message"].sender_addr not in self.known_nodes: #new node to the list of known nodes
 							self.known_nodes.append(self.currently_receiving[informing_node.node_id]["message"].sender_addr)
-						self.message_logger.log(self.currently_receiving[informing_node.node_id]["message"], informing_node.node_id, self.node_id, self.current_time, signal_rssi, 0, 1)
+						self.message_logger.log(self.currently_receiving[informing_node.node_id]["message"], informing_node.node_id, self.node_id, self.current_time, signal_rssi, signal_snr, 0, 1)
 						self.process_received_message(copy.deepcopy(self.currently_receiving[informing_node.node_id]["message"]), signal_rssi)
 					else: # the collision happened during message receiving
-						self.message_logger.log(self.currently_receiving[informing_node.node_id]["message"], informing_node.node_id, self.node_id, self.current_time, signal_rssi, 1, 1)
+						self.message_logger.log(self.currently_receiving[informing_node.node_id]["message"], informing_node.node_id, self.node_id, self.current_time, signal_rssi, signal_snr, 1, 1)
 						self.rx_fail += 1
 					del self.currently_receiving[informing_node.node_id]
 					if len(self.currently_receiving) == 0:
@@ -370,7 +370,7 @@ class MeshNode:
 			for n_id in self.currently_receiving:
 				if self.currently_receiving[n_id]["last_heard"] < self.current_time - (MeshConfig.RX_TIMEOUT * step_interval):
 					self.debug("Removing rx message from the queue after timeout; from 0x{:08x}".format(n_id))
-					self.message_logger.log(self.currently_receiving[n_id]["message"], n_id, self.node_id, self.current_time, 0, int(self.currently_receiving[n_id]["collision"] > 0), 0)
+					self.message_logger.log(self.currently_receiving[n_id]["message"], n_id, self.node_id, self.current_time, 0, 0, int(self.currently_receiving[n_id]["collision"] > 0), 0)
 					r_id.append(n_id)
 					self.rx_fail += 1
 			for n_id in r_id:

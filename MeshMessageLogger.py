@@ -7,7 +7,7 @@ class MeshMessageLogger:
 		self.log_file_path = log_file_path
 		self.file_exists = os.path.isfile(self.log_file_path)
 
-	def log(self, mesh_message, tx_node, rx_node, timestamp, rssi, collision, complete_reception):
+	def log(self, mesh_message, tx_node, rx_node, timestamp, rssi, snr, collision, complete_reception):
 		message_id = mesh_message.message_id
 		sender_addr = mesh_message.sender_addr
 		dest_addr = mesh_message.dest_addr
@@ -32,6 +32,7 @@ class MeshMessageLogger:
 			'tx_node': f"0x{tx_node:08x}",
 			'rx_node': f"0x{rx_node:08x}",
 			'rssi': rssi,
+			'snr': snr,
 			'collision': collision,
 			'complete_reception': complete_reception
 		}

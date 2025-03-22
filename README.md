@@ -15,10 +15,15 @@ This is a very early version. Many features are not well thought out yet. It may
 - very simple propagation model,
 - output as mp4 and csv.
 
-## Details explained
+## Some details explained
 ### tx_time calculation
 The time needed to transmit a message over LoRa is calculated with the method published in [Lora Modem Designer's Guide](https://github.com/meshtastic/meshtastic/blob/master/static/documents/LoRa_Design_Guide.pdf) and [Meshtastic source code](https://github.com/meshtastic/firmware/blob/1e4a0134e6ed6d455e54cd21f64232389280781b/src/mesh/RadioInterface.cpp#L201).
 For *LONG_FAST* modem preset, the SF = 11, BW = 250000 Hz and symbol_time = 8192 µs. For *MEDIUM_FAST* modem preset, the SF= 9, BW = 250000 Hz and symbol_time = 2048 µs.
+
+### Signal to Noise Ration (SNR) calculation
+This problem is simplified as there is no need to simulate the hardware and the whole communication channel. 
+
+The SNR is calculated with the formula: $ SNR = P_{signal} - P_{noise} $ where $ P_{signal} $ is the RSSI of the signal (dBm) and $ P_{noise} $ is the power of the background noise (dBm). The RSSI is calculated with simple propagation model. The background noise level (power) is just a parameter of the node (default: -100 dBm). The background noise level is constant during the simulation (it may change in future). When SNR > -20 dB, then it is considered as "*station in range*".
 
 ## Requirements
 - ffmpeg,
