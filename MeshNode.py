@@ -122,6 +122,13 @@ class MeshNode:
 				return n
 		return None
 
+	@cache
+	def calculate_slot_time(self):
+		# https://github.com/meshtastic/firmware/blob/1e4a0134e6ed6d455e54cd21f64232389280781b/src/mesh/RadioInterface.cpp#L594
+		sum_propagation_turnaround_MAC_time = (0.2 + 0.4 + 7)*1000
+		symbol_time = 1000000 * (2**self.ModemPreset["SF"]/self.ModemPreset["BW"])
+		return 2.5 * symbol_time + sum_propagation_turnaround_MAC_time;
+
 	def update_position(self, new_position: tuple[float, float, float]):
 		"""Update node coordinates"""
 		self.position = new_position  # Update the position tuple
@@ -153,6 +160,9 @@ class MeshNode:
 			raise ValueError("Invalid frequency (range 150-960 MHz)")
 		if not (0 <= self.node_id <= 0xFFFFFFFF):
 			raise ValueError("Invalid node_id (must be a 32-bit integer)")
+	
+	def is_unconditional_forwarder(self):
+		return (self.role in [Role.ROUTER, Role.REPEATER, Role.ROUTER_CLIENT, Role.ROUTER_LATE])
 
 	def change_state(self, new_state):
 		#self.debug("change state: {} -> {}".format(self.state, new_state))
@@ -320,16 +330,19 @@ class MeshNode:
 		if self.state == NodeState.IDLE and self.msg_tx_buffer is None:
 			try:
 				self.msg_tx_buffer = self.message_queue.get(block=False)
-				if self.msg_tx_buffer.message_id in self.messages_heard and self.messages_heard[self.msg_tx_buffer.message_id]["count"] > 1:
+				if (not self.is_unconditional_forwarder()) and self.msg_tx_buffer.message_id in self.messages_heard and self.messages_heard[self.msg_tx_buffer.message_id]["count"] > 1:
 					self.debug(f"message {self.msg_tx_buffer.message_id:08x} dropped, because heard twice or more")
 					self.msg_tx_buffer = None
 				else:
 					if self.msg_tx_buffer.sender_addr != self.node_id:
 						self.forwarded += 1
-					self.backoff_time = random.randint(MeshConfig.CWMIN, MeshConfig.CWMAX)
+					if self.role not in [Role.ROUTER, Role.REPEATER, Role.ROUTER_CLIENT]:
+						self.backoff_time = random.randint(MeshConfig.CLIENT_CWmin, MeshConfig.CLIENT_CWmax+1) * self.calculate_slot_time()
+					else:
+						self.backoff_time = random.randint(MeshConfig.ROUTER_CWmin, MeshConfig.ROUTER_CWmax+1) * self.calculate_slot_time()
 					self.change_state(NodeState.WAITING_TO_TX)
-					#self.debug(f"Backoff: {self.backoff_time} ms")
-			except:
+					#self.debug(f"Backoff: {self.backoff_time} µs")
+			except queue.Empty:
 				pass
 		elif self.state == NodeState.WAITING_TO_TX and self.msg_tx_buffer is not None:
 			self.backoff_time -= step_interval

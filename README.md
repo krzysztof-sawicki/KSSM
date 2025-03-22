@@ -50,6 +50,7 @@ Options:
 * [ ] repeater role
 * [ ] easy way to change propagation model
 * [ ] coexistence of nodes working on different frequencies and LoRa modem presets
+* [ ] a little bit more smart doing things (optimization)
 
 ![Example](example.gif)
 
