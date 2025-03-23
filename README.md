@@ -38,7 +38,7 @@ Options:
 - `--nodes_data=nodes.json` - JSON file with description about nodes, the example JSON structure is in `examples` directory,
 - `--simulation_time=N` - length of the simulation in seconds,
 - `--time_resolution=N` - time between the events in microseconds,
-- `--out_name=out.mp4` - name of the output video file,
+- `--mp4_name=out.mp4` - name of the output video file, mp4 file will be generated only if this option has been given,
 - `--slowmo_factor=N` - slowdown factor of the output video file,
 - `--csv_name=file.csv` - name of the csv file with the messages history.
 

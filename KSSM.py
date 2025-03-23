@@ -112,7 +112,7 @@ class MeshSim:
 
 		subprocess.call([
 		"ffmpeg", "-f", "concat", "-safe", "0", "-i", f"{self.temp_directory}/ffmpeg_input.txt",
-		"-vsync", "vfr", "-pix_fmt", "yuv420p", out_name
+		"-vsync", "vfr", "-pix_fmt", "yuv420p", "-hide_banner", "-loglevel", "error", out_name
 		])
 
 	def plot_nodes(self, time = 0):
@@ -172,11 +172,11 @@ if __name__ == "__main__":
 	simulation_time = MeshConfig.SIMULATION_TIME
 	time_resolution = MeshConfig.SIMULATION_INTERVAL
 	slowmo_factor = MeshConfig.SLOWMO_FACTOR
-	out_name = 'kssm.mp4'
+	mp4_out_name = None
 	csv_out_name = 'kssm.csv'
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "", ["nodes_data=", "simulation_time=", "time_resolution=", "out_name=", "slowmo_factor=", "csv_name="])
+		opts, args = getopt.getopt(sys.argv[1:], "", ["nodes_data=", "simulation_time=", "time_resolution=", "mp4_name=", "slowmo_factor=", "csv_name="])
 	except getopt.GetoptError as err:
 		print(str(err))
 		sys.exit(2)
@@ -188,8 +188,8 @@ if __name__ == "__main__":
 			simulation_time = int(arg)
 		elif opt == '--time_resolution':
 			time_resolution = int(arg)
-		elif opt == '--out_name':
-			out_name = arg
+		elif opt == '--mp4_name':
+			mp4_out_name = arg
 		elif opt == '--slowmo_factor':
 			slowmo_factor = int(arg)
 		elif opt == '--csv_name':
@@ -221,4 +221,5 @@ if __name__ == "__main__":
 		for t in range((simulation_time * 1000000)//time_resolution):
 			mesh_sim.time_advance(time_resolution)
 		mesh_sim.print_summary()
-		mesh_sim.make_video(out_name, slowmo_factor)
+		if mp4_out_name is not None:
+			mesh_sim.make_video(mp4_out_name, slowmo_factor)
