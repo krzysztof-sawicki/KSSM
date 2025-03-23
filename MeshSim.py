@@ -119,7 +119,7 @@ class MeshSim:
 		])
 
 	def plot_nodes(self, time = 0):
-		fig, ax = plt.subplots(figsize=(10, 10))
+		fig, ax = plt.subplots(figsize=((self.size[1]-self.size[0])/1000, (self.size[3]-self.size[2])/1000))
 
 		# Draw nodes and ranges
 		for node in self.nodes:
