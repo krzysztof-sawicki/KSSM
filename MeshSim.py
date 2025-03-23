@@ -13,12 +13,13 @@ import LoRaConstants
 import MeshConfig
 
 class MeshSim:
-	def __init__(self, nodes_data, size = (0, 1000, 0, 1000), png_out_dir = None, csv_out_name = 'out.csv'):
+	def __init__(self, nodes_data, size = (0, 1000, 0, 1000), png_out_dir = None, messages_csv_name = 'messages.csv', nodes_csv_name = 'nodes.csv'):
 		self.size = size # x_min, x_max, y_min, y_max
 		self.nodes_data = nodes_data
 		self.nodes = []
 		self.nodes_by_id = {}
-		self.csv_out_name = csv_out_name
+		self.messages_csv_name = messages_csv_name
+		self.nodes_csv_name = nodes_csv_name
 		self.current_time = 0
 		self.png_out_dir = png_out_dir
 		if self.png_out_dir is not None:
@@ -56,7 +57,8 @@ class MeshSim:
 				neighbors = self.nodes,
 				debug = n["debug"],
 				role = role,
-				csv_out_name = self.csv_out_name
+				messages_csv_name = self.messages_csv_name,
+				nodes_csv_name = self.nodes_csv_name
 			)
 			print(node)
 			self.nodes.append(node)

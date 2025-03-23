@@ -18,7 +18,7 @@ This is a very early version. Many features are not well thought out yet. It may
 ## Some details explained
 ### tx_time calculation
 The time needed to transmit a message over LoRa is calculated with the method published in [Lora Modem Designer's Guide](https://github.com/meshtastic/meshtastic/blob/master/static/documents/LoRa_Design_Guide.pdf) and [Meshtastic source code](https://github.com/meshtastic/firmware/blob/1e4a0134e6ed6d455e54cd21f64232389280781b/src/mesh/RadioInterface.cpp#L201).
-For *LONG_FAST* modem preset, the SF = 11, BW = 250000 Hz and symbol_time = 8192 µs. For *MEDIUM_FAST* modem preset, the SF= 9, BW = 250000 Hz and symbol_time = 2048 µs.
+For *LONG_FAST* modem preset, the SF = 11, BW = 250000 Hz and symbol_time = 8192 µs. For *MEDIUM_FAST* modem preset, the SF = 9, BW = 250000 Hz and symbol_time = 2048 µs.
 
 ### Signal to Noise Ration (SNR) calculation
 This problem is simplified as there is no need to simulate the hardware and the whole communication channel. 
@@ -30,7 +30,7 @@ The SNR is calculated with the formula: $ SNR = P_{signal} - P_{noise} $ where $
 - python 3.7+,
 - numpy, matplotlib.
 
-## Usage example
+## Usage
 ```
 $ python3 kssm.py --nodes_data=nodes.json 
 [--simulation_time=10]
@@ -38,7 +38,8 @@ $ python3 kssm.py --nodes_data=nodes.json
 [--png_out_dir=output_dir]
 [--mp4_name=kssm.mp4]
 [--slowmo_factor=5]
-[--csv_name=file.csv]
+[--messages_csv_name=kssm-messages.csv]
+[--nodes_csv_name=kssm-nodes.csv]
 ```
 Options:
 - `--nodes_data=nodes.json` - JSON file with description about nodes, the example JSON structure is in `examples` directory,
@@ -47,7 +48,8 @@ Options:
 - `--png_out_dir=output_dir` - path to the directory where the PNG files will be stored,
 - `--mp4_name=out.mp4` - name of the output video file, mp4 file will be generated only if this option has been given, requires `--png_out_dir`,
 - `--slowmo_factor=N` - slowdown factor of the output video file,
-- `--csv_name=file.csv` - name of the csv file with the messages history.
+- `--messages_csv_name=file.csv` - name of the csv file with the messages history,
+- `--nodes_csv_name=file.csv` - name of the csv file with the nodes history,
 
 ## TODO
 * [x] tx_time
@@ -61,6 +63,9 @@ Options:
 * [ ] separating the data link and network layer logic into separate methods
 * [x] backoff calculation regarding the node role
 * [ ] repeater role
+* [ ] waiting for ACK (receiving of retransmitted message from me)
+* [x] AirUtil, TxUtil
+* [ ] summarized bar plots at the end of simulation
 * [ ] easy way to change propagation model
 * [ ] coexistence of nodes working on different frequencies and LoRa modem presets
 * [ ] a little bit more smart doing things (optimization)

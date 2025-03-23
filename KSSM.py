@@ -14,11 +14,12 @@ if __name__ == "__main__":
 	time_resolution = MeshConfig.SIMULATION_INTERVAL
 	slowmo_factor = MeshConfig.SLOWMO_FACTOR
 	mp4_out_name = None
-	csv_out_name = 'kssm.csv'
+	messages_csv_name = 'kssm-messages.csv'
+	nodes_csv_name = 'kssm-nodes.csv'
 	png_out_dir = None
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "", ["nodes_data=", "simulation_time=", "time_resolution=", "png_out_dir=", "mp4_name=", "slowmo_factor=", "csv_name="])
+		opts, args = getopt.getopt(sys.argv[1:], "", ["nodes_data=", "simulation_time=", "time_resolution=", "png_out_dir=", "mp4_name=", "slowmo_factor=", "messages_csv_name=", "nodes_csv_name="])
 	except getopt.GetoptError as err:
 		print(str(err))
 		sys.exit(2)
@@ -36,8 +37,10 @@ if __name__ == "__main__":
 			mp4_out_name = arg
 		elif opt == '--slowmo_factor':
 			slowmo_factor = int(arg)
-		elif opt == '--csv_name':
-			csv_out_name = arg
+		elif opt == '--messages_csv_name':
+			messagess_csv_name = arg
+		elif opt == '--nodes_csv_name':
+			nodes_csv_name = arg
 	
 	with open(nodes_data_file, 'r') as f:
 		nodes_data = json.load(f)
@@ -60,7 +63,7 @@ if __name__ == "__main__":
 		y_min -= int(0.2*y_r)
 		y_max += int(0.2*y_r)
 		
-		mesh_sim = MeshSim(nodes_data, size = (x_min, x_max, y_min, y_max), png_out_dir = png_out_dir, csv_out_name = csv_out_name)
+		mesh_sim = MeshSim(nodes_data, size = (x_min, x_max, y_min, y_max), png_out_dir = png_out_dir, messages_csv_name = messages_csv_name, nodes_csv_name = nodes_csv_name)
 		if png_out_dir is not None:
 			mesh_sim.plot_nodes()
 		for t in range((simulation_time * 1000000)//time_resolution):
