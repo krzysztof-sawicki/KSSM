@@ -1,6 +1,6 @@
 import random
 import json
-NUM_NODES = 12
+NUM_NODES = 10
 X_SIZE = 20000
 Y_SIZE = 20000
 
