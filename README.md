@@ -32,13 +32,20 @@ The SNR is calculated with the formula: $ SNR = P_{signal} - P_{noise} $ where $
 
 ## Usage example
 ```
-$ python3 kssm.py --nodes_data=nodes.json [--simulation_time=10] [--time_resolution=1000] [--out_name=kssm.mp4] [--slowmo_factor=5] [--csv_name=file.csv]
+$ python3 kssm.py --nodes_data=nodes.json 
+[--simulation_time=10]
+[--time_resolution=1000]
+[--png_out_dir=output_dir]
+[--mp4_name=kssm.mp4]
+[--slowmo_factor=5]
+[--csv_name=file.csv]
 ```
 Options:
 - `--nodes_data=nodes.json` - JSON file with description about nodes, the example JSON structure is in `examples` directory,
 - `--simulation_time=N` - length of the simulation in seconds,
 - `--time_resolution=N` - time between the events in microseconds,
-- `--mp4_name=out.mp4` - name of the output video file, mp4 file will be generated only if this option has been given,
+- `--png_out_dir=output_dir` - path to the directory where the PNG files will be stored,
+- `--mp4_name=out.mp4` - name of the output video file, mp4 file will be generated only if this option has been given, requires `--png_out_dir`,
 - `--slowmo_factor=N` - slowdown factor of the output video file,
 - `--csv_name=file.csv` - name of the csv file with the messages history.
 

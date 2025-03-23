@@ -342,7 +342,7 @@ class MeshNode:
 				message = MeshMessage(l, message_type = MessageType.NODEINFO, sender_addr = self.node_id, ModemPreset = self.ModemPreset)
 			elif self.last_position_time is None or self.current_time/1000 > self.last_position_time + self.position_interval:
 				l = random.randint(MeshConfig.POSITION_MIN_LEN, MeshConfig.POSITION_MAX_LEN)
-				message = MeshMessage(l, message_type = MessageType.POSITION, sender_addr = self.node_idm, ModemPreset = self.ModemPreset)
+				message = MeshMessage(l, message_type = MessageType.POSITION, sender_addr = self.node_id, ModemPreset = self.ModemPreset)
 			if message:
 				try:
 					self.message_queue.put(message, block = False)
