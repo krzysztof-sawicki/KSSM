@@ -52,6 +52,7 @@ class MeshSim:
 				noise_level = n["noise_level"],
 				frequency = n["frequency"],
 				lora_mode = lora_mode,
+				hop_start = n["hop_start"],
 				nodeinfo_interval = n["nodeinfo_interval"] * 1000000,
 				position_interval = n["position_interval"] * 1000000,
 				neighbors = self.nodes,

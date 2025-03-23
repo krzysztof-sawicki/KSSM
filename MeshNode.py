@@ -42,7 +42,7 @@ class MeshNode:
 	def __init__(self, node_id: int = None, long_name: str = None, 
 				role: Role = Role.CLIENT, position: tuple[float, float, float] = (0, 0, 10),
 				tx_power: int = 10, noise_level: float = -100,
-				frequency: float = 869.525e6, lora_mode: LoRaMode = LoRaMode.MEDIUM_FAST,
+				frequency: float = 869.525e6, lora_mode: LoRaMode = LoRaMode.MEDIUM_FAST, hop_start = 3,
 				position_interval: int = 600000000, nodeinfo_interval: int = 600000000,
 				text_message_min_interval: int = 2000000, text_message_max_interval: int = 12000000,
 				neighbors = None, debug = False, messages_csv_name = 'messages.csv', nodes_csv_name = 'nodes.csv'):
@@ -57,6 +57,7 @@ class MeshNode:
 		:param noise_level: background noise level in dBm (default -100)
 		:param frequency: Operating frequency in Hz (default 869525000)
 		:param lora_mode: LoRa modem operation mode (default MediumFast)
+		:param hop_start: default hop_start value for generated messages
 		:param position_interval: Position packet broadcast interval in µs
 		:param nodeinfo_interval: NodeInfo packet broadcast interval in µs
 		:param text_message_min_interval: minimal time before new text message is generated in µs
@@ -84,6 +85,9 @@ class MeshNode:
 		self.position_interval = position_interval
 		self.nodeinfo_interval = nodeinfo_interval
 		self.debugMask = debug
+		self.hop_start = hop_start
+		if self.hop_start < 0 or self.hop_start > 7:
+			self.hop_start = 3
 		self.ModemPreset = ModemPreset.params[int(self.lora_mode)]
 		self.minimal_snr = -20 #I should do it better in the future :-)
 
@@ -342,10 +346,10 @@ class MeshNode:
 			message = None
 			if self.last_nodeinfo_time is None or self.current_time/1000 > self.last_nodeinfo_time + self.nodeinfo_interval:
 				l = random.randint(MeshConfig.NODEINFO_MIN_LEN, MeshConfig.NODEINFO_MAX_LEN)
-				message = MeshMessage(l, message_type = MessageType.NODEINFO, sender_addr = self.node_id, ModemPreset = self.ModemPreset)
+				message = MeshMessage(l, message_type = MessageType.NODEINFO, sender_addr = self.node_id, ModemPreset = self.ModemPreset, hop_start = self.hop_start)
 			elif self.last_position_time is None or self.current_time/1000 > self.last_position_time + self.position_interval:
 				l = random.randint(MeshConfig.POSITION_MIN_LEN, MeshConfig.POSITION_MAX_LEN)
-				message = MeshMessage(l, message_type = MessageType.POSITION, sender_addr = self.node_id, ModemPreset = self.ModemPreset)
+				message = MeshMessage(l, message_type = MessageType.POSITION, sender_addr = self.node_id, ModemPreset = self.ModemPreset, hop_start = self.hop_start)
 			if message:
 				try:
 					self.message_queue.put(message, block = False)
@@ -358,7 +362,7 @@ class MeshNode:
 			self.last_text_time = random.randint(self.text_message_min_interval, self.text_message_max_interval)
 		if self.current_time > self.last_text_time:
 			l = random.randint(MeshConfig.NODEINFO_MIN_LEN, MeshConfig.NODEINFO_MAX_LEN)
-			message = MeshMessage(random.randint(MeshConfig.TEXT_MIN_LEN, MeshConfig.TEXT_MAX_LEN), message_type = MessageType.TEXT, sender_addr = self.node_id, ModemPreset = self.ModemPreset)
+			message = MeshMessage(random.randint(MeshConfig.TEXT_MIN_LEN, MeshConfig.TEXT_MAX_LEN), message_type = MessageType.TEXT, sender_addr = self.node_id, ModemPreset = self.ModemPreset, hop_start = self.hop_start)
 			self.last_text_time += random.randint(self.text_message_min_interval,self.text_message_max_interval)
 			try:
 				self.message_queue.put(message, block = False)
