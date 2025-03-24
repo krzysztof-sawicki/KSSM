@@ -68,5 +68,14 @@ Options:
 * [ ] coexistence of nodes working on different frequencies and LoRa modem presets
 * [ ] a little bit more smart doing things (optimization)
 
-![Example](example.gif)
+## Example results
+
+![Example](images/example.gif)
+![Air util](images/kssm-air util.png)
+![TX util](images/kssm-tx_util.png)
+![Air stat](images/kssm-air_stat.png)
+![Known nodes](images/kssm-known_nodes.png)
+![Messages heard](images/kssm-messages_heard.png)
+![RX stat](images/kssm-rx_stat.png)
+![TX stat](images/kssm-tx_stat.png)
 
