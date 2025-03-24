@@ -13,7 +13,7 @@ import LoRaConstants
 import MeshConfig
 
 class MeshSim:
-	def __init__(self, nodes_data, size = (0, 1000, 0, 1000), png_out_dir = None, messages_csv_name = 'messages.csv', nodes_csv_name = 'nodes.csv'):
+	def __init__(self, nodes_data, size = (0, 1000, 0, 1000), png_out_dir = None, messages_csv_name = 'messages.csv', nodes_csv_name = 'nodes.csv', results_prefix=''):
 		self.size = size # x_min, x_max, y_min, y_max
 		self.nodes_data = nodes_data
 		self.nodes = []
@@ -22,6 +22,7 @@ class MeshSim:
 		self.nodes_csv_name = nodes_csv_name
 		self.current_time = 0
 		self.png_out_dir = png_out_dir
+		self.results_prefix = results_prefix
 		if self.png_out_dir is not None:
 			os.makedirs(self.png_out_dir, exist_ok=True)
 
@@ -101,9 +102,70 @@ class MeshSim:
 			if self.png_out_dir is not None:
 				self.plot_nodes(self.current_time)
 
-	def print_summary(self):
+	def make_summary(self):
+		node_names = []
+		known_nodes = {'known_nodes': []}
+		messages_heard = {'messages_heard': []}
+		tx_stat = {
+			'tx_origin': [],
+			'tx_done': [],
+			'forwarded': [],
+			'collisions_caused': [],
+		}
+		air_stat = {
+			'air_util': [],
+			'tx_util': []
+		}
+		rx_stat = {
+			'rx_success': [],
+			'rx_fail': [],
+			'rx_dups': [],
+			'rx_unicast': [],
+		}
+
 		for n in self.nodes:
 			print(n.summarize())
+			node_names.append(f"{n.node_id:08x}")
+			messages_heard["messages_heard"].append(len(n.messages_heard))
+			known_nodes["known_nodes"].append(len(n.known_nodes))
+			tx_stat["tx_origin"].append(n.tx_origin)
+			tx_stat["tx_done"].append(n.tx_done)
+			tx_stat["forwarded"].append(n.forwarded)
+			tx_stat["collisions_caused"].append(n.collisions_caused)
+			air_stat["air_util"].append(n.air_util)
+			air_stat["tx_util"].append(n.tx_util)
+			rx_stat["rx_success"].append(n.rx_success)
+			rx_stat["rx_fail"].append(n.rx_fail)
+			rx_stat["rx_dups"].append(n.rx_dups)
+			rx_stat["rx_unicast"].append(n.rx_unicast)
+
+		self.plot_stats(node_names, known_nodes, 'known_nodes', 'Number of known nodes')
+		self.plot_stats(node_names, messages_heard, 'messages_heard', 'Number of unique messages heard')
+		self.plot_stats(node_names, tx_stat, 'tx_stat', 'Number of transmitted messages')
+		self.plot_stats(node_names, air_stat, 'air_stat', 'Air statistics')
+		self.plot_stats(node_names, rx_stat, 'rx_stat', 'RX statistics')
+
+
+	def plot_stats(self, node_names, data, filename, title):
+		x = np.arange(len(node_names))
+		width = 1 / (len(data)+1)
+		multiplier = 0
+		fig, ax = plt.subplots(layout='constrained', figsize=(len(node_names), 5))
+
+		for attribute, measurement in data.items():
+			offset = width * multiplier
+			rects = ax.bar(x + offset, measurement, width, label=attribute)
+			ax.bar_label(rects, padding=3)
+			multiplier += 1
+
+		# Add some text for labels, title and custom x-axis tick labels, etc.
+		ax.set_ylabel('Number')
+		ax.set_title(title)
+		ax.set_xticks(x + width, node_names)
+		ax.legend(bbox_to_anchor=(0.5, -0.15), loc='upper center')
+
+		plt.savefig(self.results_prefix + filename + ".png", dpi=200)
+
 
 	def make_video(self, out_name, slowmo_factor):
 		def extract_us(filename):

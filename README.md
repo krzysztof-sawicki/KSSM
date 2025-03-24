@@ -38,18 +38,16 @@ $ python3 kssm.py --nodes_data=nodes.json
 [--png_out_dir=output_dir]
 [--mp4_name=kssm.mp4]
 [--slowmo_factor=5]
-[--messages_csv_name=kssm-messages.csv]
-[--nodes_csv_name=kssm-nodes.csv]
+[--results_prefix=./kssm-]
 ```
 Options:
-- `--nodes_data=nodes.json` - JSON file with description about nodes, the example JSON structure is in `examples` directory,
-- `--simulation_time=N` - length of the simulation in seconds,
-- `--time_resolution=N` - time between the events in microseconds,
-- `--png_out_dir=output_dir` - path to the directory where the PNG files will be stored,
-- `--mp4_name=out.mp4` - name of the output video file, mp4 file will be generated only if this option has been given, requires `--png_out_dir`,
-- `--slowmo_factor=N` - slowdown factor of the output video file,
-- `--messages_csv_name=file.csv` - name of the csv file with the messages history,
-- `--nodes_csv_name=file.csv` - name of the csv file with the nodes history,
+- `--nodes_data=nodes.json` - **required**, JSON file with description about nodes, the example JSON structure is in `examples` directory,
+- `--simulation_time=N` - length of the simulation in seconds (default 10 s),
+- `--time_resolution=N` - time between the events in microseconds (default 1000 µs),
+- `--png_out_dir=output_dir` - path to the directory where the PNG files will be stored (default None),
+- `--mp4_name=out.mp4` - name of the output video file, mp4 file will be generated only if this option has been given, requires `--png_out_dir` (default None),
+- `--slowmo_factor=N` - slowdown factor of the output video file (default 5),
+- `--results_prefix=./kssm-` - prefix (may contain the path) of result csv files (*prefix-messages.csv* and *prefix-nodes.csv*) (default ./kssm-).
 
 ## TODO
 * [x] tx_time
@@ -65,7 +63,7 @@ Options:
 * [ ] repeater role
 * [ ] waiting for ACK (receiving of retransmitted message from me)
 * [x] AirUtil, TxUtil
-* [ ] summarized bar plots at the end of simulation
+* [x] summarized bar plots at the end of simulation
 * [ ] easy way to change propagation model
 * [ ] coexistence of nodes working on different frequencies and LoRa modem presets
 * [ ] a little bit more smart doing things (optimization)

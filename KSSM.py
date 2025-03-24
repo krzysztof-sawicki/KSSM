@@ -14,11 +14,12 @@ if __name__ == "__main__":
 	time_resolution = MeshConfig.SIMULATION_INTERVAL
 	slowmo_factor = MeshConfig.SLOWMO_FACTOR
 	mp4_out_name = None
-	messages_csv_name = 'kssm-messages.csv'
-	nodes_csv_name = 'kssm-nodes.csv'
+	results_prefix = './kssm-'
+	messages_csv_name = results_prefix + 'messages.csv'
+	nodes_csv_name = results_prefix + 'nodes.csv'
 	png_out_dir = None
 
-	options = ["nodes_data=", "simulation_time=", "time_resolution=", "png_out_dir=", "mp4_name=", "slowmo_factor=", "messages_csv_name=", "nodes_csv_name=", "help"]
+	options = ["nodes_data=", "simulation_time=", "time_resolution=", "png_out_dir=", "mp4_name=", "slowmo_factor=", "results_prefix=./kssm-", "help"]
 
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], "", options)
@@ -39,10 +40,10 @@ if __name__ == "__main__":
 			mp4_out_name = arg
 		elif opt == '--slowmo_factor':
 			slowmo_factor = int(arg)
-		elif opt == '--messages_csv_name':
-			messagess_csv_name = arg
-		elif opt == '--nodes_csv_name':
-			nodes_csv_name = arg
+		elif opt == '--results_prefix':
+			results_prefix = arg
+			messages_csv_name = results_prefix + "messages.csv"
+			nodes_csv_name = results_prefix + "nodes.csv"
 		elif opt == '--help':
 			for o in options:
 				print(f"--{o}")
@@ -73,11 +74,11 @@ if __name__ == "__main__":
 		y_min -= int(0.2*y_r)
 		y_max += int(0.2*y_r)
 
-		mesh_sim = MeshSim(nodes_data, size = (x_min, x_max, y_min, y_max), png_out_dir = png_out_dir, messages_csv_name = messages_csv_name, nodes_csv_name = nodes_csv_name)
+		mesh_sim = MeshSim(nodes_data, size = (x_min, x_max, y_min, y_max), png_out_dir = png_out_dir, messages_csv_name = messages_csv_name, nodes_csv_name = nodes_csv_name, results_prefix = results_prefix)
 		if png_out_dir is not None:
 			mesh_sim.plot_nodes()
 		for t in range((simulation_time * 1000000)//time_resolution):
 			mesh_sim.time_advance(time_resolution)
-		mesh_sim.print_summary()
+		mesh_sim.make_summary()
 		if mp4_out_name is not None and png_out_dir is not None:
 			mesh_sim.make_video(mp4_out_name, slowmo_factor)
