@@ -18,8 +18,10 @@ if __name__ == "__main__":
 	nodes_csv_name = 'kssm-nodes.csv'
 	png_out_dir = None
 
+	options = ["nodes_data=", "simulation_time=", "time_resolution=", "png_out_dir=", "mp4_name=", "slowmo_factor=", "messages_csv_name=", "nodes_csv_name=", "help"]
+
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "", ["nodes_data=", "simulation_time=", "time_resolution=", "png_out_dir=", "mp4_name=", "slowmo_factor=", "messages_csv_name=", "nodes_csv_name="])
+		opts, args = getopt.getopt(sys.argv[1:], "", options)
 	except getopt.GetoptError as err:
 		print(str(err))
 		sys.exit(2)
@@ -41,7 +43,15 @@ if __name__ == "__main__":
 			messagess_csv_name = arg
 		elif opt == '--nodes_csv_name':
 			nodes_csv_name = arg
-	
+		elif opt == '--help':
+			for o in options:
+				print(f"--{o}")
+			sys.exit(0)
+
+	if nodes_data_file is None:
+		print("--nodes_data=file.json is required")
+		sys.exit(-1)
+
 	with open(nodes_data_file, 'r') as f:
 		nodes_data = json.load(f)
 		x_min, x_max, y_min, y_max = None, None, None, None
@@ -62,7 +72,7 @@ if __name__ == "__main__":
 		x_max += int(0.2*x_r)
 		y_min -= int(0.2*y_r)
 		y_max += int(0.2*y_r)
-		
+
 		mesh_sim = MeshSim(nodes_data, size = (x_min, x_max, y_min, y_max), png_out_dir = png_out_dir, messages_csv_name = messages_csv_name, nodes_csv_name = nodes_csv_name)
 		if png_out_dir is not None:
 			mesh_sim.plot_nodes()

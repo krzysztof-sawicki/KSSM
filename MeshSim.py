@@ -24,7 +24,7 @@ class MeshSim:
 		self.png_out_dir = png_out_dir
 		if self.png_out_dir is not None:
 			os.makedirs(self.png_out_dir, exist_ok=True)
-		
+
 		self.create_nodes()
 
 	def create_nodes(self):
@@ -38,11 +38,31 @@ class MeshSim:
 					role = Role.CLIENT_MUTE
 				elif n["role"] == 'ROUTER_CLIENT':
 					role = Role.ROUTER_CLIENT
+				elif n["role"] == 'ROUTER_LATE':
+					role = Role.ROUTER_LATE
+				elif n["role"] == 'REPEATER':
+					role = Role.REPEATER
+				# every other role is treated as client
 			if "lora_mode" in n.keys():
 				if n["lora_mode"] == 'MediumFast':
 					lora_mode = LoRaConstants.LoRaMode.MEDIUM_FAST
 				elif n["lora_mode"] == 'LongFast':
 					lora_mode = LoRaConstants.LoRaMode.LONG_FAST
+				elif n["lora_mode"] == 'LongSlow':
+					lora_mode = LoRaConstants.LONG_SLOW
+				elif n["lora_mode"] == 'VeryLongSlow':
+					lora_mode = LoRaConstants.VERY_LONG_SLOW
+				elif n["lora_mode"] == 'MediumSlow':
+					lora_mode = LoRaConstants.MEDIUM_SLOW
+				elif n["lora_mode"] == 'ShortSlow':
+					lora_mode = LoRaConstants.SHORT_SLOW
+				elif n["lora_mode"] == 'ShortFast':
+					lora_mode = LoRaConstants.SHORT_FAST
+				elif n["lora_mode"] == 'LongModerate':
+					lora_mode = LoRaConstants.LONG_MODERATE
+				elif n["lora_mode"] == 'ShortTurbo':
+					lora_mode = LoRaConstants.SHORT_TURBO
+
 			node_id = int(n["node_id"], 16) & 0xffffffff
 			node = MeshNode(
 				node_id = node_id,
