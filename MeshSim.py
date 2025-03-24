@@ -144,12 +144,42 @@ class MeshSim:
 		self.plot_stats(node_names, tx_stat, 'tx_stat', 'Number of transmitted messages')
 		self.plot_stats(node_names, air_stat, 'air_stat', 'Air statistics')
 		self.plot_stats(node_names, rx_stat, 'rx_stat', 'RX statistics')
+		
+		self.plot_air_util()
 
+	def plot_air_util(self):
+		x_coords = [node.position[0] for node in self.nodes]
+		y_coords = [node.position[1] for node in self.nodes]
+		air_utils = [node.air_util for node in self.nodes]
+		tx_utils = [node.tx_util for node in self.nodes]
+
+		print(x_coords)
+		print(y_coords)
+		print(air_utils)
+		print(tx_utils)
+		
+		for name, data in [('air util', air_utils), ('tx_util', tx_utils)]:
+			fig, ax = plt.subplots(figsize=((self.size[1]-self.size[0])/1000, (self.size[3]-self.size[2])/1000))
+			plt.grid()
+			ax.set_xlim(self.size[0], self.size[1])
+			ax.set_ylim(self.size[2], self.size[3])
+			base_size = (self.size[1] - self.size[0]) * 0.005
+			for i, v in enumerate(data):
+				if v < 0.05:
+					color = 'green'
+				elif v < 0.1: 
+					color = 'yellow'
+				else:
+					color = 'red'
+				ax.scatter(x_coords[i], y_coords[i], s=100*v*base_size, c=color, alpha=0.9)
+				ax.annotate(f"{self.nodes[i].node_id:08x}\n{v*100:.1f}%", (x_coords[i], y_coords[i]), fontsize=7)
+				ax.set_title(name)
+				plt.savefig(self.results_prefix + name + ".png", dpi=200)
 
 	def plot_stats(self, node_names, data, filename, title):
 		x = np.arange(len(node_names))
-		width = 1 / (len(data)+1)
-		multiplier = 0
+		width = 1 / (len(data)+2)
+		multiplier = 1
 		fig, ax = plt.subplots(layout='constrained', figsize=(len(node_names), 5))
 
 		for attribute, measurement in data.items():
@@ -158,12 +188,10 @@ class MeshSim:
 			ax.bar_label(rects, padding=3)
 			multiplier += 1
 
-		# Add some text for labels, title and custom x-axis tick labels, etc.
-		ax.set_ylabel('Number')
+		#ax.set_ylabel('Number')
 		ax.set_title(title)
 		ax.set_xticks(x + width, node_names)
 		ax.legend(bbox_to_anchor=(0.5, -0.15), loc='upper center')
-
 		plt.savefig(self.results_prefix + filename + ".png", dpi=200)
 
 
