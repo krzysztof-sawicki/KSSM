@@ -158,7 +158,7 @@ class MeshSim:
 		print(air_utils)
 		print(tx_utils)
 		
-		for name, data in [('air util', air_utils), ('tx_util', tx_utils)]:
+		for name, data in [('air_util', air_utils), ('tx_util', tx_utils)]:
 			fig, ax = plt.subplots(figsize=((self.size[1]-self.size[0])/1000, (self.size[3]-self.size[2])/1000))
 			plt.grid()
 			ax.set_xlim(self.size[0], self.size[1])

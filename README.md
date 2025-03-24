@@ -71,7 +71,7 @@ Options:
 ## Example results
 
 ![Example](images/example.gif)
-![Air util](images/kssm-air util.png)
+![Air util](images/kssm-air_util.png)
 ![TX util](images/kssm-tx_util.png)
 ![Air stat](images/kssm-air_stat.png)
 ![Known nodes](images/kssm-known_nodes.png)
