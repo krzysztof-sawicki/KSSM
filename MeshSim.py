@@ -95,9 +95,9 @@ class MeshSim:
 				changedState = True
 
 		if changedState or self.current_time % 100000 == 0:
-			print("{:6d} ".format(self.current_time), end='')
+			print("{:12d} ".format(self.current_time), end='')
 			for n in self.nodes:
-				print("{:12s} ".format(str(n.state)), end='')
+				print("{:14s} ".format(str(n.state)), end='')
 			print()
 			if self.png_out_dir is not None:
 				self.plot_nodes(self.current_time)
@@ -225,6 +225,7 @@ class MeshSim:
 
 		subprocess.call([
 		"ffmpeg", "-f", "concat", "-safe", "0", "-i", f"{self.png_out_dir}/ffmpeg_input.txt",
+		"-vf", 'pad=width=ceil(iw/2)*2:height=ceil(ih/2)*2',
 		"-vsync", "vfr", "-pix_fmt", "yuv420p", "-hide_banner", "-loglevel", "error", out_name
 		])
 

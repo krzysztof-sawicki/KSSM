@@ -328,7 +328,7 @@ class MeshNode:
 			self.messages_heard[message.message_id]["count"] += 1
 			self.rx_dups += 1
 		else: # heard for the first time
-			self.messages_heard[message.message_id] = {"count": 1, "rssi": rssi, "snr": snr}
+			self.messages_heard[message.message_id] = {"count": 1, "rssi": rssi, "snr": snr, "sender_addr": message.sender_addr, "hops_away": message.hop_start - message.hop_limit}
 			if message.dest_addr == self.node_id: # we are the destination
 				self.rx_unicast += 1
 			elif message.hop_limit > 0:
