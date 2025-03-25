@@ -146,6 +146,8 @@ class MeshSim:
 		self.plot_stats(node_names, rx_stat, 'rx_stat', 'RX statistics')
 		
 		self.plot_air_util()
+		
+		self.plot_messages_success_rate()
 
 	def plot_air_util(self):
 		x_coords = [node.position[0] for node in self.nodes]
@@ -193,6 +195,38 @@ class MeshSim:
 		ax.set_xticks(x + width, node_names)
 		ax.legend(bbox_to_anchor=(0.5, -0.15), loc='upper center')
 		plt.savefig(self.results_prefix + filename + ".png", dpi=200)
+		
+	def plot_messages_success_rate(self):
+		for node in self.nodes:
+			fig, ax = plt.subplots(figsize=((self.size[1]-self.size[0])/1000, (self.size[3]-self.size[2])/1000))
+			plt.grid()
+			plt.title(f'Messages from 0x{node.node_id:08x} success rate')
+			ax.set_xlim(self.size[0], self.size[1])
+			ax.set_ylim(self.size[2], self.size[3])
+			base_size = (self.size[1] - self.size[0]) * 0.001
+			tx_origin = len(node.tx_origin_list)
+			for nodedest in self.nodes:
+				if node.node_id != nodedest.node_id:
+					msgs_received = 0
+					hops_away = 0
+					for tx_msg_id in node.tx_origin_list:
+						if tx_msg_id in nodedest.messages_heard:
+							msgs_received += 1
+							hops_away += nodedest.messages_heard[tx_msg_id]["hops_away"]
+					success_rate = msgs_received / tx_origin
+					if msgs_received > 0:
+						hops_away_avg = hops_away / msgs_received
+						size = base_size * 100 * success_rate
+						ax.scatter(nodedest.position[0], nodedest.position[1], s=size, c='red', alpha=0.9)
+						ax.annotate(f"{nodedest.node_id:08x}\nReceived: {msgs_received} msgs ({(success_rate*100):.1f}%)\nAvg hops away: {hops_away_avg:.1f}", (nodedest.position[0], nodedest.position[1]), fontsize=7)
+					else:
+						ax.scatter(nodedest.position[0], nodedest.position[1], s=base_size * 5, c='red', alpha=0.9)
+						ax.annotate(f"{nodedest.node_id:08x}\nReceived: 0 msgs", (nodedest.position[0], nodedest.position[1]), fontsize=7)
+				else:
+					ax.scatter(node.position[0], node.position[1], s=base_size * 100, c='green', alpha=0.9)
+					ax.annotate(f"{node.node_id:08x}\nSent: {tx_origin} messages", (node.position[0], node.position[1]), fontsize=7)
+				plt.savefig(self.results_prefix + f"success_rate_{node.node_id:08x}" + ".png", dpi=200)
+
 
 
 	def make_video(self, out_name, slowmo_factor):

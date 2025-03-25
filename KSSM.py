@@ -19,7 +19,7 @@ if __name__ == "__main__":
 	nodes_csv_name = results_prefix + 'nodes.csv'
 	png_out_dir = None
 
-	options = ["nodes_data=", "simulation_time=", "time_resolution=", "png_out_dir=", "mp4_name=", "slowmo_factor=", "results_prefix=./kssm-", "help"]
+	options = ["nodes_data=", "simulation_time=", "time_resolution=", "png_out_dir=", "mp4_name=", "slowmo_factor=", "results_prefix=", "help"]
 
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], "", options)
