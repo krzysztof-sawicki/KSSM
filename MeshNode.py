@@ -333,6 +333,8 @@ class MeshNode:
 		if message.message_id in self.messages_heard: #duplicate
 			self.messages_heard[message.message_id]["count"] += 1
 			self.rx_dups += 1
+		elif message.sender_addr == self.node_id: #ignore echo of my own message
+			pass
 		else: # heard for the first time
 			self.messages_heard[message.message_id] = {"count": 1, "rssi": rssi, "snr": snr, "sender_addr": message.sender_addr, "hops_away": message.hop_start - message.hop_limit}
 			if message.dest_addr == self.node_id: # we are the destination
