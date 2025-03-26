@@ -89,9 +89,15 @@ class MeshNode:
 			self.hop_start = 3
 		self.ModemPreset = ModemPreset.params[int(self.lora_mode)]
 		self.minimal_snr = -20 #I should do it better in the future :-)
-
-		self.last_nodeinfo_time = random.randint(0, self.nodeinfo_interval)
-		self.last_position_time = random.randint(0, self.position_interval)
+		
+		if self.nodeinfo_interval > 0:
+			self.last_nodeinfo_time = random.randint(0, self.nodeinfo_interval)
+		else:
+			self.last_nodeinfo_time = 0
+		if self.position_interval > 0:
+			self.last_position_time = random.randint(0, self.position_interval)
+		else:
+			self.last_position_time = 0
 		
 		self.text_message_min_interval = text_message_min_interval
 		self.text_message_max_interval = text_message_max_interval
@@ -344,12 +350,14 @@ class MeshNode:
 	def message_generator(self):
 		if self.state == NodeState.IDLE:
 			message = None
-			if self.last_nodeinfo_time is None or self.current_time/1000 > self.last_nodeinfo_time + self.nodeinfo_interval:
+			if self.nodeinfo_interval > 0 and (self.last_nodeinfo_time is None or self.current_time > self.last_nodeinfo_time + self.nodeinfo_interval):
 				l = random.randint(MeshConfig.NODEINFO_MIN_LEN, MeshConfig.NODEINFO_MAX_LEN)
 				message = MeshMessage(l, message_type = MessageType.NODEINFO, sender_addr = self.node_id, ModemPreset = self.ModemPreset, hop_start = self.hop_start)
-			elif self.last_position_time is None or self.current_time/1000 > self.last_position_time + self.position_interval:
+				self.debug("NODEINFO generated")
+			elif self.position_interval > 0 and (self.last_position_time is None or self.current_time > self.last_position_time + self.position_interval):
 				l = random.randint(MeshConfig.POSITION_MIN_LEN, MeshConfig.POSITION_MAX_LEN)
 				message = MeshMessage(l, message_type = MessageType.POSITION, sender_addr = self.node_id, ModemPreset = self.ModemPreset, hop_start = self.hop_start)
+				self.debug("POSITION generated")
 			if message:
 				try:
 					self.message_queue.put(message, block = False)
@@ -358,20 +366,21 @@ class MeshNode:
 					self.tx_origin_list.append(message.message_id)
 				except:
 					self.debug("queue full, message dropped")
-		# generate text message with Poisson distribution
-		if self.last_text_time == 0:
-			self.last_text_time = random.randint(self.text_message_min_interval, self.text_message_max_interval)
-		if self.current_time > self.last_text_time:
-			l = random.randint(MeshConfig.NODEINFO_MIN_LEN, MeshConfig.NODEINFO_MAX_LEN)
-			message = MeshMessage(random.randint(MeshConfig.TEXT_MIN_LEN, MeshConfig.TEXT_MAX_LEN), message_type = MessageType.TEXT, sender_addr = self.node_id, ModemPreset = self.ModemPreset, hop_start = self.hop_start)
-			self.last_text_time += random.randint(self.text_message_min_interval,self.text_message_max_interval)
-			try:
-				self.message_queue.put(message, block = False)
-				self.tx_origin += 1
-				self.tx_origin_list.append(message.message_id)
-				self.debug("message {:08x} added to the queue".format(message.message_id))
-			except:
-				self.debug("queue full, message dropped")
+		#Generate text messages only if text_message_min_interval < text_message_max_interval and text_message_max_interval != 0
+		if self.text_message_min_interval < self.text_message_max_interval and self.text_message_max_interval != 0:
+			if self.last_text_time == 0:
+				self.last_text_time = random.randint(self.text_message_min_interval, self.text_message_max_interval)
+			if self.current_time > self.last_text_time:
+				message = MeshMessage(random.randint(MeshConfig.TEXT_MIN_LEN, MeshConfig.TEXT_MAX_LEN), message_type = MessageType.TEXT, sender_addr = self.node_id, ModemPreset = self.ModemPreset, hop_start = self.hop_start)
+				self.last_text_time += random.randint(self.text_message_min_interval,self.text_message_max_interval)
+				self.debug("TEXT generated")
+				try:
+					self.message_queue.put(message, block = False)
+					self.tx_origin += 1
+					self.tx_origin_list.append(message.message_id)
+					self.debug("message {:08x} added to the queue".format(message.message_id))
+				except:
+					self.debug("queue full, message dropped")
 
 	def time_advance(self, step_interval = 1): #step interval in microseconds
 		self.current_time += step_interval

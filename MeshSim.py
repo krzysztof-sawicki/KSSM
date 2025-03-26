@@ -78,6 +78,8 @@ class MeshSim:
 				hop_start = n["hop_start"],
 				nodeinfo_interval = n["nodeinfo_interval"] * 1000000,
 				position_interval = n["position_interval"] * 1000000,
+				text_message_min_interval = n["text_message_min_interval"] * 1000000,
+				text_message_max_interval = n["text_message_max_interval"] * 1000000,
 				neighbors = self.nodes,
 				debug = n["debug"],
 				role = role,
