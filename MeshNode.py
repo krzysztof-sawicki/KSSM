@@ -244,6 +244,10 @@ class MeshNode:
 			self.rx_time_start = self.current_time
 			self.state = new_state
 			self.state_changed = True
+		elif self.state == NodeState.WAITING_TO_TX and new_state == NodeState.IDLE:	#dropped forwarded message because heard at least twice
+			self.backoff_time_sum += self.current_time - self.backoff_start_time
+			self.state = new_state
+			self.state_changed = True
 		elif self.state == new_state: # RX_BUSY -> RX_BUSY due to collision
 			self.state_changed = True
 		elif self.state == NodeState.RX_BUSY and (new_state == NodeState.IDLE or new_state == NodeState.WAITING_TO_TX):
@@ -333,6 +337,9 @@ class MeshNode:
 		if message.message_id in self.messages_heard: #duplicate
 			self.messages_heard[message.message_id]["count"] += 1
 			self.rx_dups += 1
+			self.debug(f"message {message.message_id:08x} duplicated")
+			if not self.is_unconditional_forwarder() and self.msg_tx_buffer is not None and self.msg_tx_buffer.message_id == message.message_id and self.backoff_time > 0: #drop the frame from sending queue
+				self.backoff_time = 0
 		elif message.sender_addr == self.node_id: #ignore echo of my own message
 			pass
 		else: # heard for the first time
@@ -396,15 +403,11 @@ class MeshNode:
 				r_snr = 0
 				if self.msg_tx_buffer.message_id in self.messages_heard:
 					r_snr = self.messages_heard[self.msg_tx_buffer.message_id]["snr"]
-				if (not self.is_unconditional_forwarder()) and self.msg_tx_buffer.message_id in self.messages_heard and self.messages_heard[self.msg_tx_buffer.message_id]["count"] > 1:
-					self.debug(f"message {self.msg_tx_buffer.message_id:08x} dropped, because heard twice or more")
-					self.msg_tx_buffer = None
-				else:
-					if self.msg_tx_buffer.sender_addr != self.node_id:
-						self.forwarded += 1
-					self.backoff_time = self.calculate_backoff_time(rebroadcast = rebroadcast, SNR = r_snr)
-					self.change_state(NodeState.WAITING_TO_TX)
-					self.debug(f"Backoff: {self.backoff_time} µs")
+				if self.msg_tx_buffer.sender_addr != self.node_id:
+					self.forwarded += 1
+				self.backoff_time = self.calculate_backoff_time(rebroadcast = rebroadcast, SNR = r_snr)
+				self.change_state(NodeState.WAITING_TO_TX)
+				self.debug(f"Backoff: {self.backoff_time} µs")
 			except queue.Empty:
 				pass
 		elif self.state == NodeState.WAITING_TO_TX and self.msg_tx_buffer is not None:
@@ -412,10 +415,14 @@ class MeshNode:
 			if self.backoff_time <= 0:
 				self.backoff_time = 0
 				if len(self.currently_receiving) == 0:
-					self.change_state(NodeState.TX_BUSY)
 					self.tx_time = self.msg_tx_buffer.tx_time
+					if (not self.is_unconditional_forwarder()) and self.msg_tx_buffer.message_id in self.messages_heard and self.messages_heard[self.msg_tx_buffer.message_id]["count"] > 1:
+						self.debug(f"message {self.msg_tx_buffer.message_id:08x} dropped, because heard {self.messages_heard[self.msg_tx_buffer.message_id]['count']} times")
+						self.msg_tx_buffer = None
+						self.change_state(NodeState.IDLE)
+					else:
+						self.change_state(NodeState.TX_BUSY)
 					#self.debug("TX start, msg_id = {:8x} tx_time = {} ms".format(self.msg_tx_buffer.message_id, self.tx_time))
-
 		elif self.state == NodeState.TX_BUSY:
 			self.tx_time -= step_interval
 			self.inform_neighbors(step_interval)
