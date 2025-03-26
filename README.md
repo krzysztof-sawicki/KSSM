@@ -39,6 +39,7 @@ $ python3 kssm.py --nodes_data=nodes.json
 [--mp4_name=kssm.mp4]
 [--slowmo_factor=5]
 [--results_prefix=./kssm-]
+[--plot_dpi=200]
 ```
 Options:
 - `--nodes_data=nodes.json` - **required**, JSON file with description about nodes, the example JSON structure is in `examples` directory,
@@ -47,7 +48,8 @@ Options:
 - `--png_out_dir=output_dir` - path to the directory where the PNG files will be stored (default None),
 - `--mp4_name=out.mp4` - name of the output video file, mp4 file will be generated only if this option has been given, requires `--png_out_dir` (default None),
 - `--slowmo_factor=N` - slowdown factor of the output video file (default 5),
-- `--results_prefix=./kssm-` - prefix (may contain the path) of result csv files (*prefix-messages.csv* and *prefix-nodes.csv*) (default ./kssm-).
+- `--results_prefix=./kssm-` - prefix (may contain the path) of result csv files (*prefix-messages.csv* and *prefix-nodes.csv*) (default ./kssm-),
+- `--plot_dpi=200` - change the DPI size of PNG and MP4 (default 200).
 
 ## TODO
 * [x] tx_time

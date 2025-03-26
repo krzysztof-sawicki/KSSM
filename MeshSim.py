@@ -13,7 +13,7 @@ import LoRaConstants
 import MeshConfig
 
 class MeshSim:
-	def __init__(self, nodes_data, size = (0, 1000, 0, 1000), png_out_dir = None, messages_csv_name = 'messages.csv', nodes_csv_name = 'nodes.csv', results_prefix=''):
+	def __init__(self, nodes_data, size = (0, 1000, 0, 1000), png_out_dir = None, messages_csv_name = 'messages.csv', nodes_csv_name = 'nodes.csv', results_prefix='', plot_dpi = 200):
 		self.size = size # x_min, x_max, y_min, y_max
 		self.nodes_data = nodes_data
 		self.nodes = []
@@ -25,6 +25,7 @@ class MeshSim:
 		self.results_prefix = results_prefix
 		if self.png_out_dir is not None:
 			os.makedirs(self.png_out_dir, exist_ok=True)
+		self.dpi = plot_dpi
 
 		self.create_nodes()
 
@@ -176,7 +177,7 @@ class MeshSim:
 				ax.scatter(x_coords[i], y_coords[i], s=100*v*base_size, c=color, alpha=0.9)
 				ax.annotate(f"{self.nodes[i].node_id:08x}\n{v*100:.1f}%", (x_coords[i], y_coords[i]), fontsize=7)
 			ax.set_title(name)
-			plt.savefig(self.results_prefix + name + ".png", dpi=200)
+			plt.savefig(self.results_prefix + name + ".png", dpi=self.dpi)
 
 	def plot_stats(self, node_names, data, filename, title):
 		x = np.arange(len(node_names))
@@ -194,7 +195,7 @@ class MeshSim:
 		ax.set_title(title)
 		ax.set_xticks(x + width, node_names)
 		ax.legend(bbox_to_anchor=(0.5, -0.15), loc='upper center')
-		plt.savefig(self.results_prefix + filename + ".png", dpi=200)
+		plt.savefig(self.results_prefix + filename + ".png", dpi=self.dpi)
 		
 	def plot_messages_success_rate(self):
 		for node in self.nodes:
@@ -205,6 +206,9 @@ class MeshSim:
 			ax.set_ylim(self.size[2], self.size[3])
 			base_size = (self.size[1] - self.size[0]) * 0.001
 			tx_origin = len(node.tx_origin_list)
+			if tx_origin == 0:
+				plt.close()
+				continue
 			for nodedest in self.nodes:
 				if node.node_id != nodedest.node_id:
 					msgs_received = 0
@@ -225,8 +229,8 @@ class MeshSim:
 				else:
 					ax.scatter(node.position[0], node.position[1], s=base_size * 100, c='green', alpha=0.9)
 					ax.annotate(f"{node.node_id:08x}\nSent: {tx_origin} messages", (node.position[0], node.position[1]), fontsize=7)
-			plt.savefig(self.results_prefix + f"success_rate_{node.node_id:08x}" + ".png", dpi=200)
-
+			plt.savefig(self.results_prefix + f"success_rate_{node.node_id:08x}" + ".png", dpi=self.dpi)
+			plt.close()
 
 
 	def make_video(self, out_name, slowmo_factor):
@@ -310,5 +314,5 @@ class MeshSim:
 		ax.set_ylabel('Y [m]')
 		ax.grid(True)
 		plt.draw()
-		plt.savefig("{}/{:010d}.png".format(self.png_out_dir, time), dpi=96)
+		plt.savefig("{}/{:010d}.png".format(self.png_out_dir, time), dpi=self.dpi)
 		plt.close()

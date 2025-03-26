@@ -18,8 +18,9 @@ if __name__ == "__main__":
 	messages_csv_name = results_prefix + 'messages.csv'
 	nodes_csv_name = results_prefix + 'nodes.csv'
 	png_out_dir = None
+	plot_dpi = 200
 
-	options = ["nodes_data=", "simulation_time=", "time_resolution=", "png_out_dir=", "mp4_name=", "slowmo_factor=", "results_prefix=", "help"]
+	options = ["nodes_data=", "simulation_time=", "time_resolution=", "png_out_dir=", "mp4_name=", "slowmo_factor=", "results_prefix=", "plot_dpi=", "help"]
 
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], "", options)
@@ -44,6 +45,8 @@ if __name__ == "__main__":
 			results_prefix = arg
 			messages_csv_name = results_prefix + "messages.csv"
 			nodes_csv_name = results_prefix + "nodes.csv"
+		elif opt == '--plot_dpi':
+			plot_dpi = int(arg)
 		elif opt == '--help':
 			for o in options:
 				print(f"--{o}")
@@ -74,7 +77,7 @@ if __name__ == "__main__":
 		y_min -= int(0.2*y_r)
 		y_max += int(0.2*y_r)
 
-		mesh_sim = MeshSim(nodes_data, size = (x_min, x_max, y_min, y_max), png_out_dir = png_out_dir, messages_csv_name = messages_csv_name, nodes_csv_name = nodes_csv_name, results_prefix = results_prefix)
+		mesh_sim = MeshSim(nodes_data, size = (x_min, x_max, y_min, y_max), png_out_dir = png_out_dir, messages_csv_name = messages_csv_name, nodes_csv_name = nodes_csv_name, results_prefix = results_prefix, plot_dpi = plot_dpi)
 		if png_out_dir is not None:
 			mesh_sim.plot_nodes()
 		for t in range((simulation_time * 1000000)//time_resolution):
