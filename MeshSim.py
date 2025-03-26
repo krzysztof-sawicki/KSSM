@@ -28,6 +28,7 @@ class MeshSim:
 		self.dpi = plot_dpi
 
 		self.create_nodes()
+		self.plot_nodes(name = self.results_prefix + "nodes_map.png")
 
 	def create_nodes(self):
 		for n in self.nodes_data:
@@ -177,7 +178,7 @@ class MeshSim:
 				ax.scatter(x_coords[i], y_coords[i], s=100*v*base_size, c=color, alpha=0.9)
 				ax.annotate(f"{self.nodes[i].node_id:08x}\n{v*100:.1f}%", (x_coords[i], y_coords[i]), fontsize=7)
 			ax.set_title(name)
-			plt.savefig(self.results_prefix + name + ".png", dpi=self.dpi)
+			plt.savefig(self.results_prefix + name + ".png", dpi=self.dpi, bbox_inches='tight')
 
 	def plot_stats(self, node_names, data, filename, title):
 		x = np.arange(len(node_names))
@@ -195,7 +196,7 @@ class MeshSim:
 		ax.set_title(title)
 		ax.set_xticks(x + width, node_names)
 		ax.legend(bbox_to_anchor=(0.5, -0.15), loc='upper center')
-		plt.savefig(self.results_prefix + filename + ".png", dpi=self.dpi)
+		plt.savefig(self.results_prefix + filename + ".png", dpi=self.dpi, bbox_inches='tight')
 		
 	def plot_messages_success_rate(self):
 		for node in self.nodes:
@@ -229,7 +230,7 @@ class MeshSim:
 				else:
 					ax.scatter(node.position[0], node.position[1], s=base_size * 100, c='green', alpha=0.9)
 					ax.annotate(f"{node.node_id:08x}\nSent: {tx_origin} messages", (node.position[0], node.position[1]), fontsize=7)
-			plt.savefig(self.results_prefix + f"success_rate_{node.node_id:08x}" + ".png", dpi=self.dpi)
+			plt.savefig(self.results_prefix + f"success_rate_{node.node_id:08x}" + ".png", dpi=self.dpi, bbox_inches='tight')
 			plt.close()
 
 
@@ -267,7 +268,7 @@ class MeshSim:
 		"-vsync", "vfr", "-pix_fmt", "yuv420p", "-hide_banner", "-loglevel", "error", out_name
 		])
 
-	def plot_nodes(self, time = 0):
+	def plot_nodes(self, time = 0, name = None):
 		fig, ax = plt.subplots(figsize=((self.size[1]-self.size[0])/1000, (self.size[3]-self.size[2])/1000))
 
 		# Draw nodes and ranges
@@ -314,5 +315,7 @@ class MeshSim:
 		ax.set_ylabel('Y [m]')
 		ax.grid(True)
 		plt.draw()
-		plt.savefig("{}/{:010d}.png".format(self.png_out_dir, time), dpi=self.dpi)
+		if name is None:
+			name = "{}/{:010d}.png".format(self.png_out_dir, time)
+		plt.savefig(name, dpi=self.dpi, bbox_inches='tight')
 		plt.close()
