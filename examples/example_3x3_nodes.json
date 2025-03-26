@@ -13,7 +13,7 @@
 		"nodeinfo_interval": 600,
 		"text_message_min_interval": 2,
 		"text_message_max_interval": 12,
-		"debug": true
+		"debug": false
 	},
 	{
 		"node_id": "0xcafebabe",
@@ -29,7 +29,7 @@
 		"nodeinfo_interval": 600,
 		"text_message_min_interval": 2,
 		"text_message_max_interval": 12,
-		"debug": true
+		"debug": false
 	},
 	{
 		"node_id": "0xfafac0c0",
@@ -45,7 +45,7 @@
 		"nodeinfo_interval": 600,
 		"text_message_min_interval": 2,
 		"text_message_max_interval": 12,
-		"debug": true
+		"debug": false
 	},
 	{
 		"node_id": "0x0000aaaa",
@@ -61,7 +61,7 @@
 		"nodeinfo_interval": 600,
 		"text_message_min_interval": 2,
 		"text_message_max_interval": 12,
-		"debug": true
+		"debug": false
 	},
 	{
 		"node_id": "0xbaab1234",
@@ -77,7 +77,7 @@
 		"nodeinfo_interval": 600,
 		"text_message_min_interval": 2,
 		"text_message_max_interval": 12,
-		"debug": true
+		"debug": false
 	},
 	{
 		"node_id": "0x12345678",
@@ -93,7 +93,7 @@
 		"nodeinfo_interval": 600,
 		"text_message_min_interval": 2,
 		"text_message_max_interval": 12,
-		"debug": true
+		"debug": false
 	},
 	{
 		"node_id": "0xabcdef00",
@@ -109,7 +109,7 @@
 		"nodeinfo_interval": 600,
 		"text_message_min_interval": 2,
 		"text_message_max_interval": 12,
-		"debug": true
+		"debug": false
 	},
 	{
 		"node_id": "0x3ab02511",
@@ -125,7 +125,7 @@
 		"nodeinfo_interval": 600,
 		"text_message_min_interval": 2,
 		"text_message_max_interval": 12,
-		"debug": true
+		"debug": false
 	},
 	{
 		"node_id": "0xefeebaac",
@@ -141,6 +141,6 @@
 		"nodeinfo_interval": 600,
 		"text_message_min_interval": 2,
 		"text_message_max_interval": 12,
-		"debug": true
+		"debug": false
 	}
 ]

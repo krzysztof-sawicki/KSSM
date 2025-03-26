@@ -76,8 +76,7 @@ class MeshNode:
 			self.long_name = str(long_name)
 
 		self.role = role
-		self.position = position  # Store the complete position tuple
-		self.x, self.y, self.z = position  # Unpack for easy access
+		self.position = position
 		self.tx_power = tx_power
 		self.noise_level = noise_level
 		self.frequency = frequency
@@ -91,8 +90,8 @@ class MeshNode:
 		self.ModemPreset = ModemPreset.params[int(self.lora_mode)]
 		self.minimal_snr = -20 #I should do it better in the future :-)
 
-		self.last_nodeinfo_time = -self.nodeinfo_interval + random.randint(0, MeshConfig.COLD_START_NODEINFO_MAX_DELAY)
-		self.last_position_time = -self.position_interval + random.randint(0, MeshConfig.COLD_START_POSITION_MAX_DELAY)
+		self.last_nodeinfo_time = random.randint(0, self.nodeinfo_interval)
+		self.last_position_time = random.randint(0, self.position_interval)
 		
 		self.text_message_min_interval = text_message_min_interval
 		self.text_message_max_interval = text_message_max_interval
