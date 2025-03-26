@@ -175,8 +175,8 @@ class MeshSim:
 					color = 'red'
 				ax.scatter(x_coords[i], y_coords[i], s=100*v*base_size, c=color, alpha=0.9)
 				ax.annotate(f"{self.nodes[i].node_id:08x}\n{v*100:.1f}%", (x_coords[i], y_coords[i]), fontsize=7)
-				ax.set_title(name)
-				plt.savefig(self.results_prefix + name + ".png", dpi=200)
+			ax.set_title(name)
+			plt.savefig(self.results_prefix + name + ".png", dpi=200)
 
 	def plot_stats(self, node_names, data, filename, title):
 		x = np.arange(len(node_names))
@@ -225,7 +225,7 @@ class MeshSim:
 				else:
 					ax.scatter(node.position[0], node.position[1], s=base_size * 100, c='green', alpha=0.9)
 					ax.annotate(f"{node.node_id:08x}\nSent: {tx_origin} messages", (node.position[0], node.position[1]), fontsize=7)
-				plt.savefig(self.results_prefix + f"success_rate_{node.node_id:08x}" + ".png", dpi=200)
+			plt.savefig(self.results_prefix + f"success_rate_{node.node_id:08x}" + ".png", dpi=200)
 
 
 
