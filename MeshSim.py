@@ -7,6 +7,7 @@ import json
 import os
 import subprocess
 import matplotlib.pyplot as plt
+import multiprocessing as mp
 import numpy as np
 from MeshNode import MeshNode, NodeState, Role
 import LoRaConstants
@@ -269,6 +270,20 @@ class MeshSim:
 		"-vf", 'pad=width=ceil(iw/2)*2:height=ceil(ih/2)*2',
 		"-vsync", "vfr", "-pix_fmt", "yuv420p", "-hide_banner", "-loglevel", "error", out_name
 		])
+	
+	def save_plot_async(self, fig, filename, **kwargs):
+		def _save_fig(fig_copy, filename, kwargs):
+			fig_copy.savefig(filename, **kwargs)
+			plt.close(fig_copy)
+		
+		# Create a process for saving the figure
+		process = mp.Process(
+			target=_save_fig,
+			args=(fig, filename, kwargs)
+		)
+		process.start()
+		
+		return process
 
 	def plot_nodes(self, time = 0, name = None):
 		fig, ax = plt.subplots(figsize=((self.size[1]-self.size[0])/1000, (self.size[3]-self.size[2])/1000))
@@ -316,8 +331,6 @@ class MeshSim:
 		ax.set_xlabel('X [m]')
 		ax.set_ylabel('Y [m]')
 		ax.grid(True)
-		plt.draw()
 		if name is None:
 			name = "{}/{:010d}.png".format(self.png_out_dir, time)
-		plt.savefig(name, dpi=self.dpi, bbox_inches='tight')
-		plt.close()
+		save_process = self.save_plot_async(fig, name, dpi=self.dpi, bbox_inches='tight')
