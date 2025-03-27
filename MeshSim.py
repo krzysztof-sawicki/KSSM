@@ -130,7 +130,7 @@ class MeshSim:
 
 		for n in self.nodes:
 			print(n.summarize())
-			node_names.append(f"{n.node_id:08x}")
+			node_names.append(f"0x{n.node_id:08x}\n{n.long_name}")
 			messages_heard["messages_heard"].append(len(n.messages_heard))
 			known_nodes["known_nodes"].append(len(n.known_nodes))
 			tx_stat["tx_origin"].append(n.tx_origin)
@@ -179,7 +179,7 @@ class MeshSim:
 				else:
 					color = 'red'
 				ax.scatter(x_coords[i], y_coords[i], s=100*v*base_size, c=color, alpha=0.9)
-				ax.annotate(f"{self.nodes[i].node_id:08x}\n{v*100:.1f}%", (x_coords[i], y_coords[i]), fontsize=7)
+				ax.annotate(f"{self.nodes[i].long_name}\n0x{self.nodes[i].node_id:08x}\n{v*100:.1f}%", (x_coords[i], y_coords[i]), fontsize=7)
 			ax.set_title(name)
 			plt.savefig(self.results_prefix + name + ".png", dpi=self.dpi, bbox_inches='tight')
 
@@ -226,13 +226,13 @@ class MeshSim:
 						hops_away_avg = hops_away / msgs_received
 						size = base_size * 100 * success_rate
 						ax.scatter(nodedest.position[0], nodedest.position[1], s=size, c='red', alpha=0.9)
-						ax.annotate(f"{nodedest.node_id:08x}\nReceived: {msgs_received} msgs ({(success_rate*100):.1f}%)\nAvg hops away: {hops_away_avg:.1f}", (nodedest.position[0], nodedest.position[1]), fontsize=7)
+						ax.annotate(f"{nodedest.long_name}\n0x{nodedest.node_id:08x}\nReceived: {msgs_received} msgs ({(success_rate*100):.1f}%)\nAvg hops away: {hops_away_avg:.1f}", (nodedest.position[0], nodedest.position[1]), fontsize=7)
 					else:
 						ax.scatter(nodedest.position[0], nodedest.position[1], s=base_size * 5, c='red', alpha=0.9)
-						ax.annotate(f"{nodedest.node_id:08x}\nReceived: 0 msgs", (nodedest.position[0], nodedest.position[1]), fontsize=7)
+						ax.annotate(f"{nodedest.long_name}\n0x{nodedest.node_id:08x}\nReceived: 0 msgs", (nodedest.position[0], nodedest.position[1]), fontsize=7)
 				else:
 					ax.scatter(node.position[0], node.position[1], s=base_size * 100, c='green', alpha=0.9)
-					ax.annotate(f"{node.node_id:08x}\nSent: {tx_origin} messages", (node.position[0], node.position[1]), fontsize=7)
+					ax.annotate(f"{node.long_name}\n0x{node.node_id:08x}\nSent: {tx_origin} messages", (node.position[0], node.position[1]), fontsize=7)
 			plt.savefig(self.results_prefix + f"success_rate_{node.node_id:08x}" + ".png", dpi=self.dpi, bbox_inches='tight')
 			plt.close()
 
