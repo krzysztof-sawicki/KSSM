@@ -80,4 +80,5 @@ Options:
 ![Messages heard](images/kssm-messages_heard.png)
 ![RX stat](images/kssm-rx_stat.png)
 ![TX stat](images/kssm-tx_stat.png)
+![Success rate](images/kssm-success_rate.png)
 
