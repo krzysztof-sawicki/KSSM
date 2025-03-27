@@ -58,6 +58,7 @@ class MeshLogger:
 			'frequency': node.frequency,
 			'lora_mode': node.lora_mode,
 			'state': node.state,
+			'backoff_time': node.backoff_time,
 			'message_queue_len': node.message_queue.qsize(),
 			'messages_heard': len(node.messages_heard),
 			'known_nodes': len(node.known_nodes),
@@ -73,7 +74,7 @@ class MeshLogger:
 			'rx_time_sum': node.rx_time_sum,
 			'backoff_time_sum': node.backoff_time_sum,
 			'tx_util': f"{node.tx_util:.4f}",
-			'air_util': f"{node.air_util:.4f}"
+			'air_util': f"{node.air_util:.4f}",
 		}
 		file_exists = os.path.isfile(self.nodes_file_path)
 

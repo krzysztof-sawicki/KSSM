@@ -340,6 +340,8 @@ class MeshNode:
 			self.debug(f"message {message.message_id:08x} duplicated")
 			if not self.is_unconditional_forwarder() and self.msg_tx_buffer is not None and self.msg_tx_buffer.message_id == message.message_id and self.backoff_time > 0: #drop the frame from sending queue
 				self.backoff_time = 0
+				self.msg_tx_buffer = None
+
 		elif message.sender_addr == self.node_id: #ignore echo of my own message
 			pass
 		else: # heard for the first time
@@ -464,7 +466,7 @@ class MeshNode:
 			print("T: {:9d}\tS: {:10s} N: {:08x}\t{}".format(self.current_time, self.state, self.node_id, log))
 
 	def __str__(self):
-		ret = "0x{:08x} - {}".format(self.node_id, self.state)
+		ret = "{}\n0x{:08x} - {}".format(self.long_name, self.node_id, self.state)
 		if (self.state == NodeState.TX_BUSY or self.state == NodeState.WAITING_TO_TX) and self.msg_tx_buffer is not None:
 			ret += f" msg: {self.msg_tx_buffer.message_id:08x}"
 		ret += "\nin queue: {} ".format(self.message_queue.qsize())
