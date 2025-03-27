@@ -172,13 +172,13 @@ class MeshNode:
 		- source of the message (we are the source or we just rebroadcasting the message),
 		- SNR of the received message,
 		- node role (CLIENT, ROUTER etc.),
-		- channel utilization (to be done; now is 5%)
+		- channel utilization
 		"""
 		slot_time = self.calculate_slot_time()
 		
 		if rebroadcast == False:
 			# https://github.com/meshtastic/firmware/blob/1e4a0134e6ed6d455e54cd21f64232389280781b/src/mesh/RadioInterface.cpp#L247
-			CWsize = self.valmap(5, 0, 100, MeshConfig.CWmin, MeshConfig.CWmax);
+			CWsize = self.valmap(int(self.air_util*100), 0, 100, MeshConfig.CWmin, MeshConfig.CWmax);
 			return random.randint(0, 2**CWsize) * slot_time
 		else:
 			# https://github.com/meshtastic/firmware/blob/1e4a0134e6ed6d455e54cd21f64232389280781b/src/mesh/RadioInterface.cpp#L279
