@@ -339,6 +339,9 @@ class MeshNode:
 			self.rx_dups += 1
 			self.debug(f"message {message.message_id:08x} duplicated")
 			if not self.is_unconditional_forwarder() and self.msg_tx_buffer is not None and self.msg_tx_buffer.message_id == message.message_id and self.backoff_time > 0: #drop the frame from sending queue
+				"""
+				https://github.com/meshtastic/firmware/blob/1e41c994b3ec9395c1c9fb2aae25947ec6306060/src/mesh/FloodingRouter.cpp#L37
+				"""
 				self.backoff_time = 0
 				self.msg_tx_buffer = None
 
@@ -419,6 +422,9 @@ class MeshNode:
 				if len(self.currently_receiving) == 0:
 					self.tx_time = self.msg_tx_buffer.tx_time
 					if (not self.is_unconditional_forwarder()) and self.msg_tx_buffer.message_id in self.messages_heard and self.messages_heard[self.msg_tx_buffer.message_id]["count"] > 1:
+						"""
+						https://github.com/meshtastic/firmware/blob/1e41c994b3ec9395c1c9fb2aae25947ec6306060/src/mesh/FloodingRouter.cpp#L37
+						"""
 						self.debug(f"message {self.msg_tx_buffer.message_id:08x} dropped, because heard {self.messages_heard[self.msg_tx_buffer.message_id]['count']} times")
 						self.msg_tx_buffer = None
 						self.change_state(NodeState.IDLE)
