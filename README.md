@@ -44,7 +44,7 @@ Options:
 ## Some details explained
 ### tx_time calculation
 The time needed to transmit a message over LoRa is calculated with the method published in [Lora Modem Designer's Guide](https://github.com/meshtastic/meshtastic/blob/master/static/documents/LoRa_Design_Guide.pdf) and [Meshtastic source code](https://github.com/meshtastic/firmware/blob/1e4a0134e6ed6d455e54cd21f64232389280781b/src/mesh/RadioInterface.cpp#L201).
-The symbol time is calculated with the formula $$ symbol\_time = \frac{2^{SF}}{BW} $$
+The symbol time is calculated with the formula $$symbol\\_time = \frac{2^{SF}}{BW}$$
 Symbol time for some modem presets:
 - *LONG_FAST* (SF = 11, BW = 250000 Hz) - symbol_time = 8192 µs
 - *MEDIUM_FAST* (SF = 9, BW = 250000 Hz) - symbol_time = 2048 µs
@@ -53,24 +53,29 @@ Symbol time for some modem presets:
 - *SHORT_TURBO* (SF = 7, BW = 500000 HZ) - symbol_time = 256 µs
 
 ### Signal to Noise Ration (SNR) calculation
-This problem is simplified as there is no need to simulate the hardware and the whole communication channel. The SNR is calculated with the formula: $$ SNR = P_{signal} - P_{noise} $$ where $$ P_{signal} $$ is the RSSI of the signal (dBm) and $$ P_{noise} $$ is the power of the background noise (dBm). The RSSI is calculated with simple propagation model. The background noise level (power) is just a parameter of the node (default: -100 dBm). The background noise level is constant during the simulation (it may change in future). When SNR > -20 dB, then it is considered as "*station in range*".
+This problem is simplified as there is no need to simulate the hardware and the whole communication channel. The SNR is calculated with the formula: $$SNR = P_{signal} - P_{noise}$$ where $$P_{signal}$$ is the RSSI of the signal (dBm) and $$P_{noise}$$ is the power of the background noise (dBm). The RSSI is calculated with simple propagation model. The background noise level (power) is just a parameter of the node (default: -100 dBm). The background noise level is constant during the simulation (it may change in future). When SNR > -20 dB, then it is considered as "*station in range*".
 
 ### Backoff time calculation
 Backoff time (contention window) is the random time the station waits before transmission start. This time is calculated in a few different ways. The important values are:
 - CWmin = 3
 - CWmax = 8
-- $$ slot\_time = 2.5 \cdot symbol\_time + 7.6\cdot 10^{-3} $$
+- $$slot\\_time = 2.5 \cdot symbol\\_time + 7.6\cdot 10^{-3}$$
 #### For the message we are the source
 To calculate the backoff time in this case we need to know the current *air utilization* - the percentage of time the medium was used (we were transmitting or receiving). Then we need to "map" this percentage value (from 0 to 100) to the range <CWmin, CWmax>:
-$$ CWsize = \frac{air_{util}}{100} \cdot (CW_{max} - CW_{min}) + CW_{min} $$
-The backoff time is the random value from the range $$ <0, 2^{CWsize}> $$ multiplied by symbol_time:
-$$ backoff\_time = random(0, 2^{CWsize}) \cdot symbol\_time $$
+
+$$CWsize = \frac{airutil}{100} \cdot (CW_{max} - CW_{min}) + CW_{min}$$
+
+The backoff time is the random value from the range $$<0, 2^{CWsize}>$$ multiplied by symbol_time:
+$$backoff\\_time = random(0, 2^{CWsize}) \cdot symbol\\_time$$
 #### For the message we are only relaying
 The backoff time for this case is calculated in two ways, regarding the role of the relaying node. In both cases the backoff_time is related to SNR (signal-to-noise ratio) measured during receiving the message to be relayed. The SNR should be in range <-20, +10> and this value is mapped to the range <CWmin, CWmax>:
-$$ CWsize = \frac{SNR + 20}{30} \cdot (CW_{max} - CW_{min}) + CW_{min} $$
+
+$$CWsize = \frac{SNR + 20}{30} \cdot (CW_{max} - CW_{min}) + CW_{min}$$
+
 Then the backoff time is calculated as:
-- for ROUTER and REPEATER: $$ backoff\_time = random(0, 2^{CWsize}) \cdot slot\_time $$
-- for CLIENT: $$ backoff\_time = 2 CWmax \cdot slot\_time + random(0, 2^{CWsize}) * slot\_time $$
+- for ROUTER and REPEATER: $$backoff\\_time = random(0, 2^{CWsize}) \cdot slot\\_time$$
+- for CLIENT: $$backoff\\_time = 2 CWmax \cdot slot\\_time + random(0, 2^{CWsize}) \cdot slot\\_time$$
+
 As you can see, the ROUTER and the REPEATER will retransmit the message earlier than CLIENT. In both cases, the station that received the message with lower SNR (we can assume it means the station was further from the source) will retransmit the message earlier.
 ### Message relay rules
 - ROUTER or REPEATER: relays message always,
