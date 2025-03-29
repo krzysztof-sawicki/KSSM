@@ -125,6 +125,7 @@ class MeshNode:
 		self.rx_dups = 0			#received duplicates
 		self.rx_unicast = 0			#received messages with dest_addr == self.node_id
 		self.tx_done = 0			#transmitted messages
+		self.tx_cancelled = 0		#number of messages that were intended to forward, but the transmission was cancelled due to multiple reception (CLIENT mode)
 		self.forwarded = 0			#forwarded messages
 		self.collisions_caused = 0	#number of collisions caused
 		self.tx_time_sum = 0		#time spent on tx
@@ -348,6 +349,7 @@ class MeshNode:
 				"""
 				self.backoff_time = 0
 				self.msg_tx_buffer = None
+				self.tx_cancelled += 1
 
 		elif message.sender_addr == self.node_id: #ignore echo of my own message
 			pass
@@ -481,7 +483,7 @@ class MeshNode:
 			ret += f" msg: {self.msg_tx_buffer.message_id:08x}"
 		ret += "\nin queue: {} ".format(self.message_queue.qsize())
 		ret += f"known_nodes: {len(self.known_nodes)}\n"
-		ret += f"rx_success: {self.rx_success}, rx_fail: {self.rx_fail}, rx_dups: {self.rx_dups}\ntx_done: {self.tx_done}, forwarded: {self.forwarded}, collisions_caused: {self.collisions_caused}"
+		ret += f"rx_success: {self.rx_success}, rx_fail: {self.rx_fail}, rx_dups: {self.rx_dups}\ntx_done: {self.tx_done}, tx_cancelled: {self.tx_cancelled}, forwarded: {self.forwarded}, collisions_caused: {self.collisions_caused}"
 		return ret
 
 	def summarize(self):

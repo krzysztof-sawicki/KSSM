@@ -119,6 +119,7 @@ class MeshSim:
 			'tx_done': [],
 			'forwarded': [],
 			'collisions_caused': [],
+			'tx_cancelled': [],
 		}
 		air_stat = {
 			'air_util': [],
@@ -140,6 +141,7 @@ class MeshSim:
 			tx_stat["tx_done"].append(n.tx_done)
 			tx_stat["forwarded"].append(n.forwarded)
 			tx_stat["collisions_caused"].append(n.collisions_caused)
+			tx_stat["tx_cancelled"].append(n.tx_cancelled)
 			air_stat["air_util"].append(n.air_util)
 			air_stat["tx_util"].append(n.tx_util)
 			rx_stat["rx_success"].append(n.rx_success)

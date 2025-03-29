@@ -69,6 +69,7 @@ class MeshLogger:
 			'rx_unicast': node.rx_unicast,
 			'tx_done': node.tx_done,
 			'forwarded': node.forwarded,
+			'tx_cancelled': node.tx_cancelled,
 			'collisions_caused': node.collisions_caused,
 			'tx_origin': node.tx_origin,
 			'tx_sime_sum': node.tx_time_sum,
