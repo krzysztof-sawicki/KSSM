@@ -25,21 +25,21 @@ This is a very early version. Many features are not well thought out yet. It may
 $ python3 kssm.py --nodes_data=nodes.json 
 [--simulation_time=10]
 [--time_resolution=1000]
-[--png_out_dir=output_dir]
-[--mp4_name=kssm.mp4]
+[--results_dir=output_dir]
+[--png]
+[--mp4]
 [--slowmo_factor=5]
-[--results_prefix=./kssm-]
-[--plot_dpi=200]
+[--dpi=200]
 ```
 Options:
 - `--nodes_data=nodes.json` - **required**, JSON file with description about nodes, the example JSON structure is in `examples` directory,
 - `--simulation_time=N` - length of the simulation in seconds (default 10 s),
 - `--time_resolution=N` - time between the events in microseconds (default 1000 µs),
-- `--png_out_dir=output_dir` - path to the directory where the PNG files will be stored (default None),
-- `--mp4_name=out.mp4` - name of the output video file, mp4 file will be generated only if this option has been given, requires `--png_out_dir` (default None),
+- `--results_dirr=output_dir` - path to the directory where the results will be stored (default ./kssm/),
+- `--png` - turn on generating PNG files with the current state of the network with every change of state,
+- `--mp4` - turn on generating MP4 video from the PNG files (automatically turns on `--png`)
 - `--slowmo_factor=N` - slowdown factor of the output video file (default 5),
-- `--results_prefix=./kssm-` - prefix (may contain the path) of result csv files (*prefix-messages.csv* and *prefix-nodes.csv*) (default ./kssm-),
-- `--plot_dpi=200` - change the DPI size of PNG and MP4 (default 200).
+- `--dpi=200` - change the DPI size of PNG and MP4 (default 200).
 
 ## Some details explained
 ### tx_time calculation

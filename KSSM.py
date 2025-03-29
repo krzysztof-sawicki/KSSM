@@ -3,6 +3,7 @@
 import getopt
 import sys
 import json
+import os
 import MeshConfig
 from MeshSim import MeshSim
 
@@ -13,14 +14,14 @@ if __name__ == "__main__":
 	simulation_time = MeshConfig.SIMULATION_TIME
 	time_resolution = MeshConfig.SIMULATION_INTERVAL
 	slowmo_factor = MeshConfig.SLOWMO_FACTOR
-	mp4_out_name = None
-	results_prefix = './kssm-'
-	messages_csv_name = results_prefix + 'messages.csv'
-	nodes_csv_name = results_prefix + 'nodes.csv'
-	png_out_dir = None
+	results_dir = f"./kssm/"
+	generate_mp4 = False
+	generate_png = False
+	messages_csv_name = results_dir + 'messages.csv'
+	nodes_csv_name = results_dir + 'nodes.csv'
 	plot_dpi = 200
 
-	options = ["nodes_data=", "simulation_time=", "time_resolution=", "png_out_dir=", "mp4_name=", "slowmo_factor=", "results_prefix=", "plot_dpi=", "help"]
+	options = ["nodes_data=", "simulation_time=", "time_resolution=", "results_dir=", "png", "mp4", "slowmo_factor=", "dpi=", "help"]
 
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], "", options)
@@ -31,21 +32,20 @@ if __name__ == "__main__":
 	for opt, arg in opts:
 		if opt == '--nodes_data':
 			nodes_data_file = arg
-		elif opt == '--png_out_dir':
-			png_out_dir = arg
+		elif opt == '--results_dir':
+			results_dir = arg
 		elif opt == '--simulation_time':
 			simulation_time = int(arg)
 		elif opt == '--time_resolution':
 			time_resolution = int(arg)
-		elif opt == '--mp4_name':
-			mp4_out_name = arg
+		elif opt == '--png':
+			generate_png = True
+		elif opt == '--mp4':
+			generate_mp4 = True
+			generate_png = True
 		elif opt == '--slowmo_factor':
 			slowmo_factor = int(arg)
-		elif opt == '--results_prefix':
-			results_prefix = arg
-			messages_csv_name = results_prefix + "messages.csv"
-			nodes_csv_name = results_prefix + "nodes.csv"
-		elif opt == '--plot_dpi':
+		elif opt == '--dpi':
 			plot_dpi = int(arg)
 		elif opt == '--help':
 			for o in options:
@@ -55,6 +55,11 @@ if __name__ == "__main__":
 	if nodes_data_file is None:
 		print("--nodes_data=file.json is required")
 		sys.exit(-1)
+	
+	os.makedirs(results_dir, exist_ok = True)
+	os.makedirs(results_dir + "/png/", exist_ok = True)
+	messages_csv_name = results_dir + 'messages.csv'
+	nodes_csv_name = results_dir + 'nodes.csv'
 
 	with open(nodes_data_file, 'r') as f:
 		nodes_data = json.load(f)
@@ -77,11 +82,11 @@ if __name__ == "__main__":
 		y_min -= int(0.2*y_r)
 		y_max += int(0.2*y_r)
 
-		mesh_sim = MeshSim(nodes_data, size = (x_min, x_max, y_min, y_max), png_out_dir = png_out_dir, messages_csv_name = messages_csv_name, nodes_csv_name = nodes_csv_name, results_prefix = results_prefix, plot_dpi = plot_dpi)
-		if png_out_dir is not None:
+		mesh_sim = MeshSim(nodes_data, size = (x_min, x_max, y_min, y_max), results_dir = results_dir, plot_dpi = plot_dpi, generate_png = generate_png, generate_mp4 = generate_mp4)
+		if generate_png:
 			mesh_sim.plot_nodes()
 		for t in range((simulation_time * 1000000)//time_resolution):
 			mesh_sim.time_advance(time_resolution)
 		mesh_sim.make_summary()
-		if mp4_out_name is not None and png_out_dir is not None:
-			mesh_sim.make_video(mp4_out_name, slowmo_factor)
+		if generate_mp4:
+			mesh_sim.make_video(slowmo_factor)

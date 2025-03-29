@@ -14,22 +14,21 @@ import LoRaConstants
 import MeshConfig
 
 class MeshSim:
-	def __init__(self, nodes_data, size = (0, 1000, 0, 1000), png_out_dir = None, messages_csv_name = 'messages.csv', nodes_csv_name = 'nodes.csv', results_prefix='', plot_dpi = 200):
+	def __init__(self, nodes_data, size = (0, 1000, 0, 1000), results_dir = '.', generate_png = False, generate_mp4 = False, plot_dpi = 200):
 		self.size = size # x_min, x_max, y_min, y_max
 		self.nodes_data = nodes_data
 		self.nodes = []
 		self.nodes_by_id = {}
-		self.messages_csv_name = messages_csv_name
-		self.nodes_csv_name = nodes_csv_name
+		self.results_dir = results_dir
+		self.generate_mp4 = generate_mp4
+		self.generate_png = generate_png
+		self.messages_csv_name = self.results_dir + "/messages.csv"
+		self.nodes_csv_name = self.results_dir + "/nodes.csv"
 		self.current_time = 0
-		self.png_out_dir = png_out_dir
-		self.results_prefix = results_prefix
-		if self.png_out_dir is not None:
-			os.makedirs(self.png_out_dir, exist_ok=True)
 		self.dpi = plot_dpi
 
 		self.create_nodes()
-		self.plot_nodes(name = self.results_prefix + "nodes_map.png")
+		self.plot_nodes(name = self.results_dir + "/nodes_map.png")
 
 	def create_nodes(self):
 		for n in self.nodes_data:
@@ -104,7 +103,7 @@ class MeshSim:
 			for n in self.nodes:
 				print("{:14s} ".format(str(n.state)), end='')
 			print()
-			if self.png_out_dir is not None:
+			if self.generate_png:
 				self.plot_nodes(self.current_time)
 
 	def make_summary(self):
@@ -181,7 +180,7 @@ class MeshSim:
 				ax.scatter(x_coords[i], y_coords[i], s=100*v*base_size, c=color, alpha=0.9)
 				ax.annotate(f"{self.nodes[i].long_name}\n0x{self.nodes[i].node_id:08x}\n{v*100:.1f}%", (x_coords[i], y_coords[i]), fontsize=7)
 			ax.set_title(name)
-			plt.savefig(self.results_prefix + name + ".png", dpi=self.dpi, bbox_inches='tight')
+			plt.savefig(self.results_dir + "/" + name + ".png", dpi=self.dpi, bbox_inches='tight')
 
 	def plot_stats(self, node_names, data, filename, title):
 		x = np.arange(len(node_names))
@@ -199,7 +198,7 @@ class MeshSim:
 		ax.set_title(title)
 		ax.set_xticks(x + width, node_names)
 		ax.legend(bbox_to_anchor=(0.5, -0.15), loc='upper center')
-		plt.savefig(self.results_prefix + filename + ".png", dpi=self.dpi, bbox_inches='tight')
+		plt.savefig(self.results_dir + "/" + filename + ".png", dpi=self.dpi, bbox_inches='tight')
 		
 	def plot_messages_success_rate(self):
 		for node in self.nodes:
@@ -233,18 +232,18 @@ class MeshSim:
 				else:
 					ax.scatter(node.position[0], node.position[1], s=base_size * 100, c='green', alpha=0.9)
 					ax.annotate(f"{node.long_name}\n0x{node.node_id:08x}\nSent: {tx_origin} messages", (node.position[0], node.position[1]), fontsize=7)
-			plt.savefig(self.results_prefix + f"success_rate_{node.node_id:08x}" + ".png", dpi=self.dpi, bbox_inches='tight')
+			plt.savefig(self.results_dir + f"/success_rate_{node.node_id:08x}" + ".png", dpi=self.dpi, bbox_inches='tight')
 			plt.close()
 
 
-	def make_video(self, out_name, slowmo_factor):
+	def make_video(self, slowmo_factor):
 		def extract_us(filename):
 			match = re.search(r'(\d{8,10})\.png$', filename)
 			if match:
 				return int(match.group(1))
 			return 0
-		png_files = glob.glob(self.png_out_dir + "/*.png")
-		self.ffmpeg_input = open(self.png_out_dir + "/ffmpeg_input.txt", "w")
+		png_files = glob.glob(self.results_dir + "/png/*.png")
+		self.ffmpeg_input = open(self.results_dir + "/png/ffmpeg_input.txt", "w")
 
 		png_files.sort(key=extract_us)
 		frames = []
@@ -266,9 +265,9 @@ class MeshSim:
 		self.ffmpeg_input.close()
 
 		subprocess.call([
-		"ffmpeg", "-f", "concat", "-safe", "0", "-i", f"{self.png_out_dir}/ffmpeg_input.txt",
+		"ffmpeg", "-f", "concat", "-safe", "0", "-i", f"{self.results_dir}/png/ffmpeg_input.txt",
 		"-vf", 'pad=width=ceil(iw/2)*2:height=ceil(ih/2)*2',
-		"-vsync", "vfr", "-pix_fmt", "yuv420p", "-hide_banner", "-loglevel", "error", out_name
+		"-vsync", "vfr", "-pix_fmt", "yuv420p", "-hide_banner", "-loglevel", "error", f"{self.results_dir}/result.mp4"
 		])
 	
 	def save_plot_async(self, fig, filename, **kwargs):
@@ -332,5 +331,5 @@ class MeshSim:
 		ax.set_ylabel('Y [m]')
 		ax.grid(True)
 		if name is None:
-			name = "{}/{:010d}.png".format(self.png_out_dir, time)
+			name = "{}/png/{:010d}.png".format(self.results_dir, time)
 		save_process = self.save_plot_async(fig, name, dpi=self.dpi, bbox_inches='tight')
