@@ -12,6 +12,7 @@ import numpy as np
 from MeshNode import MeshNode, NodeState, Role
 import LoRaConstants
 import MeshConfig
+from KSSMconfig import KSSMconfig
 
 class MeshSim:
 	def __init__(self, nodes_data, size = (0, 1000, 0, 1000), results_dir = '.', generate_png = False, generate_mp4 = False, plot_dpi = 200):
@@ -26,6 +27,7 @@ class MeshSim:
 		self.nodes_csv_name = self.results_dir + "/nodes.csv"
 		self.current_time = 0
 		self.dpi = plot_dpi
+		self.config = KSSMconfig()
 
 		self.create_nodes()
 		self.plot_nodes(name = self.results_dir + "/nodes_map.png")
@@ -98,7 +100,7 @@ class MeshSim:
 			if n.state_was_changed():
 				changedState = True
 
-		if changedState or self.current_time % 100000 == 0:
+		if changedState or self.config.plot_every_n_microseconds_if_state_not_changed > 0 and self.current_time % self.config.plot_every_n_microseconds_if_state_not_changed == 0:
 			print("{:12d} ".format(self.current_time), end='')
 			for n in self.nodes:
 				print("{:14s} ".format(str(n.state)), end='')
@@ -178,7 +180,7 @@ class MeshSim:
 				else:
 					color = 'red'
 				ax.scatter(x_coords[i], y_coords[i], s=100*v*base_size, c=color, alpha=0.9)
-				ax.annotate(f"{self.nodes[i].long_name}\n0x{self.nodes[i].node_id:08x}\n{v*100:.1f}%", (x_coords[i], y_coords[i]), fontsize=7)
+				ax.annotate(f"{self.nodes[i].long_name}\n0x{self.nodes[i].node_id:08x}\n{v*100:.1f}%", (x_coords[i], y_coords[i]), fontsize=self.config.plot_node_font_size)
 			ax.set_title(name)
 			plt.savefig(self.results_dir + "/" + name + ".png", dpi=self.dpi, bbox_inches='tight')
 
@@ -225,13 +227,13 @@ class MeshSim:
 						hops_away_avg = hops_away / msgs_received
 						size = base_size * 100 * success_rate
 						ax.scatter(nodedest.position[0], nodedest.position[1], s=size, c='red', alpha=0.9)
-						ax.annotate(f"{nodedest.long_name}\n0x{nodedest.node_id:08x}\nReceived: {msgs_received} msgs ({(success_rate*100):.1f}%)\nAvg hops away: {hops_away_avg:.1f}", (nodedest.position[0], nodedest.position[1]), fontsize=7)
+						ax.annotate(f"{nodedest.long_name}\n0x{nodedest.node_id:08x}\nReceived: {msgs_received} msgs ({(success_rate*100):.1f}%)\nAvg hops away: {hops_away_avg:.1f}", (nodedest.position[0], nodedest.position[1]), fontsize=self.config.plot_node_font_size)
 					else:
 						ax.scatter(nodedest.position[0], nodedest.position[1], s=base_size * 5, c='red', alpha=0.9)
-						ax.annotate(f"{nodedest.long_name}\n0x{nodedest.node_id:08x}\nReceived: 0 msgs", (nodedest.position[0], nodedest.position[1]), fontsize=7)
+						ax.annotate(f"{nodedest.long_name}\n0x{nodedest.node_id:08x}\nReceived: 0 msgs", (nodedest.position[0], nodedest.position[1]), fontsize=self.config.plot_node_font_size)
 				else:
 					ax.scatter(node.position[0], node.position[1], s=base_size * 100, c='green', alpha=0.9)
-					ax.annotate(f"{node.long_name}\n0x{node.node_id:08x}\nSent: {tx_origin} messages", (node.position[0], node.position[1]), fontsize=7)
+					ax.annotate(f"{node.long_name}\n0x{node.node_id:08x}\nSent: {tx_origin} messages", (node.position[0], node.position[1]), fontsize=self.config.plot_node_font_size)
 			plt.savefig(self.results_dir + f"/success_rate_{node.node_id:08x}" + ".png", dpi=self.dpi, bbox_inches='tight')
 			plt.close()
 
@@ -293,7 +295,7 @@ class MeshSim:
 
 			# Draw a point representing the node
 			ax.scatter(x, y, color=node.color_from_state(), s = (node.tx_power + 10)**2)
-			ax.annotate("{}".format(node), (x, y-200), fontsize=7)
+			ax.annotate("{}".format(node), (x, y-200), fontsize=self.config.plot_node_font_size)
 
 		for node in self.nodes:
 			if node.state == NodeState.RX_BUSY:
@@ -313,13 +315,16 @@ class MeshSim:
 					)
 				if len(node.currently_receiving) > 1:
 					ax.text(node.position[0], node.position[1], 'x', color='red', fontsize=20, ha='center', va='center')
-			elif node.state == NodeState.TX_BUSY:
-				distance = node.calculate_theoretical_range()
+			elif node.state == NodeState.TX_BUSY and self.config.plot_range_circles:
+				distance = node.calculate_theoretical_range(minimal_rx_rssi = self.config.plot_range_circles_minimal_rssi)
+				color = 'red'
+				if self.config.plot_range_circles_color_from_message_id:
+					color = "#{:06x}".format(node.msg_tx_buffer.message_id & 0x00ffffff)
 				circle = plt.Circle((node.position[0], node.position[1]), distance,
-					color='red',
+					color=color,
 					fill=True,
 					facecolor='blue',
-					alpha=0.1,
+					alpha=0.3,
 					linestyle='--',
 					linewidth=1)
 				ax.add_artist(circle)
