@@ -45,7 +45,7 @@ class MeshNode:
 				frequency: float = 869.525e6, lora_mode: LoRaMode = LoRaMode.MEDIUM_FAST, hop_start = 3,
 				position_interval: int = 600000000, nodeinfo_interval: int = 600000000,
 				text_message_min_interval: int = 2000000, text_message_max_interval: int = 12000000,
-				neighbors = None, debug = False, messages_csv_name = 'messages.csv', nodes_csv_name = 'nodes.csv'):
+				neighbors = None, debug = False, messages_csv_name = 'messages.csv', nodes_csv_name = 'nodes.csv', backoff_csv_name = 'backoff.csv'):
 		"""
 		Initialize a Meshtastic network node
 
@@ -140,7 +140,7 @@ class MeshNode:
 		self.rx_start_time = None
 		self.backoff_start_time = None
 
-		self.logger = MeshLogger(message_file_path = messages_csv_name, nodes_file_path = nodes_csv_name)
+		self.logger = MeshLogger(message_file_path = messages_csv_name, nodes_file_path = nodes_csv_name, backoff_file_path = backoff_csv_name)
 
 	def find_node_by_id(self, node_id):
 		for n in self.neighbors:
@@ -179,14 +179,18 @@ class MeshNode:
 		if rebroadcast == False:
 			# https://github.com/meshtastic/firmware/blob/1e4a0134e6ed6d455e54cd21f64232389280781b/src/mesh/RadioInterface.cpp#L247
 			CWsize = self.valmap(int(self.air_util*100), 0, 100, MeshConfig.CWmin, MeshConfig.CWmax);
-			return random.randint(0, 2**CWsize) * slot_time
+			bt =  random.randint(0, 2**CWsize) * slot_time
 		else:
 			# https://github.com/meshtastic/firmware/blob/1e4a0134e6ed6d455e54cd21f64232389280781b/src/mesh/RadioInterface.cpp#L279
 			CWsize = self.calculate_cwsize_from_snr(SNR)
 			if self.role in [Role.ROUTER, Role.REPEATER]:
-				return random.randint(0, 2 * CWsize) * slot_time
+				bt = random.randint(0, 2 * CWsize) * slot_time
 			else:
-				return (2 * MeshConfig.CWmax * slot_time) + random.randint(0, 2**CWsize) * slot_time;
+				bt = (2 * MeshConfig.CWmax * slot_time) + random.randint(0, 2**CWsize) * slot_time;
+		
+		self.logger.log_backoff(self, rebroadcast, SNR, CWsize, bt)
+		
+		return bt
 
 	def update_position(self, new_position: tuple[float, float, float]):
 		"""Update node coordinates"""
@@ -404,7 +408,7 @@ class MeshNode:
 		if self.state == NodeState.IDLE and self.msg_tx_buffer is None:
 			try:
 				self.msg_tx_buffer = self.message_queue.get(block=False)
-				rebroadcast = (self.msg_tx_buffer.sender_addr == self.node_id)
+				rebroadcast = (self.msg_tx_buffer.sender_addr != self.node_id)
 				r_snr = 0
 				if self.msg_tx_buffer.message_id in self.messages_heard:
 					r_snr = self.messages_heard[self.msg_tx_buffer.message_id]["snr"]

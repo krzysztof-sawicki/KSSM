@@ -25,6 +25,7 @@ class MeshSim:
 		self.generate_png = generate_png
 		self.messages_csv_name = self.results_dir + "/messages.csv"
 		self.nodes_csv_name = self.results_dir + "/nodes.csv"
+		self.backoff_csv_name = self.results_dir + "/backoff.csv"
 		self.current_time = 0
 		self.dpi = plot_dpi
 		self.config = KSSMconfig()
@@ -86,7 +87,8 @@ class MeshSim:
 				debug = n["debug"],
 				role = role,
 				messages_csv_name = self.messages_csv_name,
-				nodes_csv_name = self.nodes_csv_name
+				nodes_csv_name = self.nodes_csv_name,
+				backoff_csv_name = self.backoff_csv_name
 			)
 			print(node)
 			self.nodes.append(node)

@@ -3,9 +3,10 @@ import os
 from MeshMessage import MeshMessage
 
 class MeshLogger:
-	def __init__(self, message_file_path="message.csv", nodes_file_path="nodes.csv"):
+	def __init__(self, message_file_path="message.csv", nodes_file_path="nodes.csv", backoff_file_path = "backoff.csv"):
 		self.message_file_path = message_file_path
 		self.nodes_file_path = nodes_file_path
+		self.backoff_file_path = backoff_file_path
 		
 	def log_message(self, mesh_message, tx_node, rx_node, timestamp, rssi, snr, collision, complete_reception):
 		message_id = mesh_message.message_id
@@ -79,6 +80,28 @@ class MeshLogger:
 		file_exists = os.path.isfile(self.nodes_file_path)
 
 		with open(self.nodes_file_path, mode='a', newline='') as file:
+			fieldnames = log_data.keys()
+			writer = csv.DictWriter(file, fieldnames=fieldnames)
+			if not file_exists:
+				writer.writeheader()
+			writer.writerow(log_data)
+	
+	def log_backoff(self, node, rebroadcast, SNR, CWsize, calculated_backoff):
+		log_data = {
+			'time': node.current_time,
+			'node_id': f"{node.node_id:08x}",
+			'long_name': node.long_name,
+			'role': node.role,
+			'tx_util': f"{node.tx_util:.4f}",
+			'air_util': f"{node.air_util:.4f}",
+			'rebroadcast': int(rebroadcast),
+			'SNR': SNR,
+			'CWsize': CWsize,
+			'calculated_backoff': calculated_backoff,
+		}
+		file_exists = os.path.isfile(self.backoff_file_path)
+
+		with open(self.backoff_file_path, mode='a', newline='') as file:
 			fieldnames = log_data.keys()
 			writer = csv.DictWriter(file, fieldnames=fieldnames)
 			if not file_exists:
