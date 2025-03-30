@@ -192,6 +192,14 @@ class MeshNode:
 		self.logger.log_backoff(self, rebroadcast, SNR, CWsize, bt)
 		
 		return bt
+	
+	def calculate_worst_backoff_time(self, SNR): #for ROUTER_LATE, when duplicate message was found
+		# https://github.com/meshtastic/firmware/blob/a93d779ec0a0eb44262015f6b2e6bbfee82621af/src/mesh/RadioInterface.cpp#L271
+		CWsize = self.calculate_cwsize_from_snr(SNR)
+		slot_time = self.calculate_slot_time()
+		bt = 2 * MeshConfig.CWmax * slot_time + 2**CWsize * slot_time
+		self.logger.log_backoff(self, True, SNR, CWsize, bt)
+		return bt
 
 	def update_position(self, new_position: tuple[float, float, float]):
 		"""Update node coordinates"""
@@ -225,6 +233,12 @@ class MeshNode:
 	
 	def is_unconditional_forwarder(self):
 		return (self.role in [Role.ROUTER, Role.REPEATER, Role.ROUTER_CLIENT, Role.ROUTER_LATE])
+	
+	def is_forwarder(self):
+		return(self.role in [Role.ROUTER, Role.REPEATER, Role.ROUTER_CLIENT, Role.ROUTER_LATE, Role.CLIENT, Role.CLIENT_HIDDEN])
+	
+	def is_hidden(self):
+		return(self.role in [Role.CLIENT_HIDDEN, Role.REPEATER])
 
 	def change_state(self, new_state):
 		#self.debug("change state: {} -> {}".format(self.state, new_state))
@@ -350,6 +364,11 @@ class MeshNode:
 				self.backoff_time = 0
 				self.msg_tx_buffer = None
 				self.tx_cancelled += 1
+			elif self.role == Role.ROUTER_LATE and self.msg_tx_buffer is not None and self.msg_tx_buffer.message_id == message.message_id and self.backoff_time > 0: # late router window
+				"""
+				https://github.com/meshtastic/firmware/blob/a93d779ec0a0eb44262015f6b2e6bbfee82621af/src/mesh/FloodingRouter.cpp#L56
+				"""
+				self.backoff_time = self.calculate_worst_backoff_time(self.messages_heard[message.message_id]["snr"])
 
 		elif message.sender_addr == self.node_id: #ignore echo of my own message
 			pass
@@ -357,24 +376,25 @@ class MeshNode:
 			self.messages_heard[message.message_id] = {"count": 1, "rssi": rssi, "snr": snr, "sender_addr": message.sender_addr, "hops_away": message.hop_start - message.hop_limit}
 			if message.dest_addr == self.node_id: # we are the destination
 				self.rx_unicast += 1
-			elif message.hop_limit > 0:
-				message.hop_limit -= 1
-				try:
-					self.message_queue.put(message, block = False)
-					self.debug(f"message {message.message_id:08x} put to the tx queue with hop_limit {message.hop_limit}")
-				except:
-					self.debug("queue full, message dropped instead of forwarding")
-			else:
-				self.debug(f"message {message.message_id:08x} not forwarding, hop_limit = 0")
+			elif self.is_forwarder():
+				if message.hop_limit > 0:
+					message.hop_limit -= 1
+					try:
+						self.message_queue.put(message, block = False)
+						self.debug(f"message {message.message_id:08x} put to the tx queue with hop_limit {message.hop_limit}")
+					except:
+						self.debug("queue full, message dropped instead of forwarding")
+				else:
+					self.debug(f"message {message.message_id:08x} not forwarding, hop_limit = 0")
 
 	def message_generator(self):
 		if self.state == NodeState.IDLE:
 			message = None
-			if self.nodeinfo_interval > 0 and (self.last_nodeinfo_time is None or self.current_time > self.last_nodeinfo_time + self.nodeinfo_interval):
+			if not self.is_hidden() and self.nodeinfo_interval > 0 and (self.last_nodeinfo_time is None or self.current_time > self.last_nodeinfo_time + self.nodeinfo_interval):
 				l = random.randint(MeshConfig.NODEINFO_MIN_LEN, MeshConfig.NODEINFO_MAX_LEN)
 				message = MeshMessage(l, message_type = MessageType.NODEINFO, sender_addr = self.node_id, ModemPreset = self.ModemPreset, hop_start = self.hop_start)
 				self.debug("NODEINFO generated")
-			elif self.position_interval > 0 and (self.last_position_time is None or self.current_time > self.last_position_time + self.position_interval):
+			elif not self.is_hidden() and self.position_interval > 0 and (self.last_position_time is None or self.current_time > self.last_position_time + self.position_interval):
 				l = random.randint(MeshConfig.POSITION_MIN_LEN, MeshConfig.POSITION_MAX_LEN)
 				message = MeshMessage(l, message_type = MessageType.POSITION, sender_addr = self.node_id, ModemPreset = self.ModemPreset, hop_start = self.hop_start)
 				self.debug("POSITION generated")

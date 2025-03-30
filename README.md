@@ -109,10 +109,10 @@ As you can see, the ROUTER and the REPEATER will retransmit the message earlier 
 * [ ] easy way to change propagation model
 * [ ] coexistence of nodes working on different frequencies and LoRa modem presets
 * [ ] a little bit more smart doing things (optimization)
-* [ ] REPEATER
-* [ ] CLIENT_MUTE
-* [ ] CLIENT_HIDDEN
-* [ ] ROUTER_LATE
+* [x] REPEATER
+* [x] CLIENT_MUTE
+* [x] CLIENT_HIDDEN
+* [x] ROUTER_LATE
 * [ ] machine-readable results
 
 ## Example results
