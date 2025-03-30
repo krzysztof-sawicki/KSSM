@@ -109,7 +109,7 @@ $$CWsize = \frac{SNR + 20}{30} \cdot (CW_{max} - CW_{min}) + CW_{min}$$
 Then the backoff time is calculated as:
 - for ROUTER and REPEATER: $$backoff\\_time = random(0, 2^{CWsize}) \cdot slot\\_time$$
 - for CLIENT and ROUTER_LATE (if no duplicate message was received): $$backoff\\_time = 2 CWmax \cdot slot\\_time + random(0, 2^{CWsize}) \cdot slot\\_time$$
-- for ROUTER_LATE when the message intended to relay was received more once: $$backoff\_time = 2CWmax \cdot slot\_time + 2^{CWsize} \cdot slot\_time$$
+- for ROUTER_LATE when the message intended to relay was received more once: $$backoff\\_time = 2CWmax \cdot slot\\_time + 2^{CWsize} \cdot slot\\_time$$
 
 As you can see, the ROUTER and the REPEATER will retransmit the message earlier than CLIENT. In both cases, the station that received the message with lower SNR (we can assume it means the station was further from the source) will retransmit the message earlier.
 ### Message relay rules
@@ -139,6 +139,7 @@ As you can see, the ROUTER and the REPEATER will retransmit the message earlier 
 * [ ] machine-readable results
 
 ## Example results
+More examples you can find on: [KSSM examples page](https://kssm.wszechsiec.pl/)
 
 https://github.com/user-attachments/assets/7bcf5927-d4e9-4b02-8332-fba0da0bcaa3
 
