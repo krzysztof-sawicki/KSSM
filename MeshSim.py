@@ -131,6 +131,9 @@ class MeshSim:
 			'rx_dups': [],
 			'rx_unicast': [],
 		}
+		success_rate = {
+			'normalized_success_rate': [],
+		}
 
 		for n in self.nodes:
 			print(n.summarize())
@@ -148,12 +151,17 @@ class MeshSim:
 			rx_stat["rx_fail"].append(n.rx_fail)
 			rx_stat["rx_dups"].append(n.rx_dups)
 			rx_stat["rx_unicast"].append(n.rx_unicast)
+			if n.tx_origin > 0:
+				success_rate["normalized_success_rate"].append(n.messages_confirmed / (n.tx_origin * (len(n.neighbors)-1)))
+			else:
+				success_rate["normalized_success_rate"].append(0)
 
 		self.plot_stats(node_names, known_nodes, 'known_nodes', 'Number of known nodes')
 		self.plot_stats(node_names, messages_heard, 'messages_heard', 'Number of unique messages heard')
 		self.plot_stats(node_names, tx_stat, 'tx_stat', 'Number of transmitted messages')
 		self.plot_stats(node_names, air_stat, 'air_stat', 'Air statistics')
 		self.plot_stats(node_names, rx_stat, 'rx_stat', 'RX statistics')
+		self.plot_stats(node_names, success_rate, 'normalized_success_rate', 'Normalized success rate')
 		
 		self.plot_air_util()
 		

@@ -72,6 +72,7 @@ class MeshLogger:
 			'tx_cancelled': node.tx_cancelled,
 			'collisions_caused': node.collisions_caused,
 			'tx_origin': node.tx_origin,
+			'messages_confirmed': node.messages_confirmed,
 			'tx_sime_sum': node.tx_time_sum,
 			'rx_time_sum': node.rx_time_sum,
 			'backoff_time_sum': node.backoff_time_sum,
