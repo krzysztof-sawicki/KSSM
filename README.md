@@ -117,13 +117,13 @@ As you can see, the ROUTER and the REPEATER will retransmit the message earlier 
 
 ## Example results
 
-![Example](images/example.gif)
-![Air util](images/kssm-air_util.png)
-![TX util](images/kssm-tx_util.png)
-![Air stat](images/kssm-air_stat.png)
-![Known nodes](images/kssm-known_nodes.png)
-![Messages heard](images/kssm-messages_heard.png)
-![RX stat](images/kssm-rx_stat.png)
-![TX stat](images/kssm-tx_stat.png)
-![Success rate](images/kssm-success_rate.png)
+https://github.com/krzysztof-sawicki/KSSM/blob/master/images/results.mp4
+![Air util](images/air_util.png)
+![TX util](images/tx_util.png)
+![Air stat](images/air_stat.png)
+![Known nodes](images/known_nodes.png)
+![Messages heard](images/messages_heard.png)
+![RX stat](images/rx_stat.png)
+![TX stat](images/tx_stat.png)
+![Success rate](images/success_rate_70b13ce3.png)
 
