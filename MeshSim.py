@@ -55,19 +55,19 @@ class MeshSim:
 				elif n["lora_mode"] == 'LongFast':
 					lora_mode = LoRaConstants.LoRaMode.LONG_FAST
 				elif n["lora_mode"] == 'LongSlow':
-					lora_mode = LoRaConstants.LONG_SLOW
+					lora_mode = LoRaConstants.LoRaMode.LONG_SLOW
 				elif n["lora_mode"] == 'VeryLongSlow':
-					lora_mode = LoRaConstants.VERY_LONG_SLOW
+					lora_mode = LoRaConstants.LoRaMode.VERY_LONG_SLOW
 				elif n["lora_mode"] == 'MediumSlow':
-					lora_mode = LoRaConstants.MEDIUM_SLOW
+					lora_mode = LoRaConstants.LoRaMode.MEDIUM_SLOW
 				elif n["lora_mode"] == 'ShortSlow':
-					lora_mode = LoRaConstants.SHORT_SLOW
+					lora_mode = LoRaConstants.LoRaMode.SHORT_SLOW
 				elif n["lora_mode"] == 'ShortFast':
-					lora_mode = LoRaConstants.SHORT_FAST
+					lora_mode = LoRaConstants.LoRaMode.SHORT_FAST
 				elif n["lora_mode"] == 'LongModerate':
-					lora_mode = LoRaConstants.LONG_MODERATE
+					lora_mode = LoRaConstants.LoRaMode.LONG_MODERATE
 				elif n["lora_mode"] == 'ShortTurbo':
-					lora_mode = LoRaConstants.SHORT_TURBO
+					lora_mode = LoRaConstants.LoRaMode.SHORT_TURBO
 
 			node_id = int(n["node_id"], 16) & 0xffffffff
 			node = MeshNode(

@@ -88,7 +88,7 @@ class MeshNode:
 		if self.hop_start < 0 or self.hop_start > 7:
 			self.hop_start = 3
 		self.ModemPreset = ModemPreset.params[int(self.lora_mode)]
-		self.minimal_snr = -20 #I should do it better in the future :-)
+		self.minimal_snr = (-1) * self.ModemPreset['PG'] # Simplified receiving treshold equals to processing gain
 		
 		if self.nodeinfo_interval > 0:
 			self.last_nodeinfo_time = random.randint(0, self.nodeinfo_interval)

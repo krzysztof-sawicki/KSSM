@@ -13,7 +13,8 @@ This is a very early version. Many features are not well thought out yet. It may
 - CSMA/CA algorithm, related to real values used by real Meshtastic nodes,
 - simple collision detection,
 - very simple propagation model,
-- output as mp4 and csv.
+- station "range" is calculated with processing gain, so different Modem Presets result in different range,
+- output as png, mp4 and csv.
 
 ## Requirements
 - ffmpeg,
@@ -53,7 +54,18 @@ Symbol time for some modem presets:
 - *SHORT_TURBO* (SF = 7, BW = 500000 HZ) - symbol_time = 256 µs
 
 ### Signal to Noise Ration (SNR) calculation
-This problem is simplified as there is no need to simulate the hardware and the whole communication channel. The SNR is calculated with the formula: $$SNR = P_{signal} - P_{noise}$$ where $$P_{signal}$$ is the RSSI of the signal (dBm) and $$P_{noise}$$ is the power of the background noise (dBm). The RSSI is calculated with simple propagation model. The background noise level (power) is just a parameter of the node (default: -100 dBm). The background noise level is constant during the simulation (it may change in future). When SNR > -20 dB, then it is considered as "*station in range*".
+This problem is simplified as there is no need to simulate the hardware and the whole communication channel. The SNR is calculated with the formula: $$SNR = P_{signal} - P_{noise}$$ where $$P_{signal}$$ is the RSSI of the signal (dBm) and $$P_{noise}$$ is the power of the background noise (dBm). The RSSI is calculated with simple propagation model. The background noise level (power) is just a parameter of the node (default: -100 dBm). The background noise level is constant during the simulation (it may change in future). When $$SNR > -1 \cdot PG$$ (PG - *processing gain*), then it is considered as "*station in range*".
+
+### Processing gain
+Different LoRa settings result in different "range". For the same antennas and the same tx_power we can have further range by changing SF (*Spreading Factor*) and CR (*Coding Rate*) parameters in exchange for longer time needed for the transmission.
+
+The *processing gain* (PG) is calculated as:
+
+$$PG = 10 \cdot log_{10}(\frac{2^{SF}}{SF}) - 10 \cdot log_{10}(\frac{CR}{4})$$
+
+where:
+- SF is the Spreading Factor (7 to 12),
+- CR is the cummulative number of bits used for coding 4 informational bits (5 - 8).
 
 ### Backoff time calculation
 Backoff time (contention window) is the random time the station waits before transmission start. This time is calculated in a few different ways. The important values are:
