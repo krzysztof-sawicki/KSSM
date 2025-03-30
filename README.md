@@ -1,3 +1,4 @@
+![icon](misc/icon.png)
 # KSSM - Yet Another Mesh network Simulator 
 ## 🇵🇱 Kolejny Symulator Sieci Mesh
 
@@ -19,7 +20,7 @@ This is a very early version. Many features are not well thought out yet. It may
 ## Requirements
 - ffmpeg,
 - python 3.7+,
-- numpy, matplotlib.
+- numpy, matplotlib, pandas.
 
 ## Usage
 ```

@@ -4,6 +4,7 @@ import getopt
 import sys
 import json
 import os
+import shutil
 import MeshConfig
 from MeshSim import MeshSim
 
@@ -63,6 +64,7 @@ if __name__ == "__main__":
 
 	with open(nodes_data_file, 'r') as f:
 		nodes_data = json.load(f)
+		shutil.copy(nodes_data_file, results_dir + "/input.json")
 		x_min, x_max, y_min, y_max = None, None, None, None
 		for n in nodes_data:
 			if "position" not in n.keys():
@@ -90,3 +92,4 @@ if __name__ == "__main__":
 		mesh_sim.make_summary()
 		if generate_mp4:
 			mesh_sim.make_video(slowmo_factor)
+		mesh_sim.make_html(simulation_time = simulation_time, time_resolution = time_resolution)
