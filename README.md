@@ -117,7 +117,8 @@ As you can see, the ROUTER and the REPEATER will retransmit the message earlier 
 
 ## Example results
 
-https://github.com/krzysztof-sawicki/KSSM/blob/master/images/result.mp4
+https://github.com/user-attachments/assets/7bcf5927-d4e9-4b02-8332-fba0da0bcaa3
+
 ![Air util](images/air_util.png)
 ![TX util](images/tx_util.png)
 ![Air stat](images/air_stat.png)
