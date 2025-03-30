@@ -49,7 +49,7 @@ The KSSM calculates some metrics that describe network parameters. These metrics
 3. *Number of known nodes* - the number of unique source node_ids registered in received frames;
 4. *Number of messages heard* - the number of unique messages the node received;
 5. *Normalized success rate* - this metric is calculated as 
-$$normalized\_success\_rate = \frac{confirmed\_messages}{tx\_origin \cdot (number\_of\_nodes - 1)}$$
+$$normalized\\_success\\_rate = \frac{confirmed\\_messages}{tx\\_origin \cdot (number\\_of\\_nodes - 1)}$$
 When the node successfuly receives the message for the first time, the source's *confirmed_messages* metrics is incremented. Every message can be confirmed by all nodes (except the source node) in the map.
 6.  *rx_success* - number of successfuly ended receptions, this metric counts every received message (echos of our own, duplicates);
 7.  *rx_fail* - number of times the reception failed because of collision;
