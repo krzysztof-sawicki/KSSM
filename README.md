@@ -9,13 +9,16 @@ Why another simulator? Because I can :-)
 This is a very early version. Many features are not well thought out yet. It may (or may not) evolve over time.
 
 ## Currently working features and their limitations
-- nodes are generating messages with very random lenght,
-- nodes can repeat messages,
-- CSMA/CA algorithm, related to real values used by real Meshtastic nodes,
-- simple collision detection,
-- very simple propagation model,
-- station "range" is calculated with processing gain, so different Modem Presets result in different range,
-- output as png, mp4 and csv.
+- nodes can work in modes: CLIENT, CLIENT_MUTE, CLIENT_HIDDEN, ROUTER, ROUTER_CLIENT (despite it is deprecated), REPEATER, ROUTER_LATE; all other modes will work as a CLIENT;
+- nodes can work in one of these presets: LONG_FAST, LONG_SLOW, VERY_LONG_SLOW (despite it is deprecated), MEDIUM_SLOW, MEDIUM_FAST, SHORT_SLOW, SHORT_FAST, LONG_MODERATE, SHORT_TURBO;
+- all nodes should be working in the same modem preset, mixed presets will result in strange behaviour;
+- nodes are generating messages with very random lenght;
+- CSMA/CA algorithm, related to real values used by real Meshtastic nodes;
+- the best possible time resolution is 1 µs, the default time resolution is 1 ms;
+- simple collision detection;
+- very simple propagation model;
+- station "range" is calculated with processing gain, so different Modem Presets result in different range;
+- output as png, mp4, csv and html.
 
 ## Requirements
 - ffmpeg,
@@ -24,7 +27,7 @@ This is a very early version. Many features are not well thought out yet. It may
 
 ## Usage
 ```
-$ python3 kssm.py --nodes_data=nodes.json 
+$ python3 KSSM.py --nodes_data=nodes.json 
 [--simulation_time=10]
 [--time_resolution=1000]
 [--results_dir=output_dir]
@@ -42,6 +45,67 @@ Options:
 - `--mp4` - turn on generating MP4 video from the PNG files (automatically turns on `--png`)
 - `--slowmo_factor=N` - slowdown factor of the output video file (default 5),
 - `--dpi=200` - change the DPI size of PNG and MP4 (default 200).
+
+## Input json structure
+```
+[
+    {
+        "node_id": "0xeacb7fe3",
+        "long_name": "Node 1",
+        "position": [
+            2246.37,
+            57.61,
+            10
+        ],
+        "tx_power": 22,
+        "noise_level": -102,
+        "frequency": 869525000,
+        "lora_mode": "LongFast",
+        "hop_start": 3,
+        "role": "CLIENT",
+        "position_interval": 0,
+        "nodeinfo_interval": 0,
+        "text_message_min_interval": 0,
+        "text_message_max_interval": 10,
+        "debug": false
+    },
+    {
+        "node_id": "0x30e6712a",
+        "long_name": "Node 2",
+        "position": [
+            2068.78,
+            2358.12,
+            10
+        ],
+        "tx_power": 22,
+        "noise_level": -102,
+        "frequency": 869525000,
+        "lora_mode": "LongFast",
+        "hop_start": 3,
+        "role": "CLIENT",
+        "position_interval": 0,
+        "nodeinfo_interval": 0,
+        "text_message_min_interval": 0,
+        "text_message_max_interval": 10,
+        "debug": false
+    }
+]
+```
+
+The input file is json coded list of dictionaries. The elements of the dictionary describing a node are:
+- *node_id* - identifier of the node, in a hexadecimal representation of 32-bit long integer;
+- *long_name* - text name of the node;
+- *position* - a list of three values representing x, y and z;
+- *tx_power* - the power of transmitter as a number in dBm;
+- *noise_level* - the power of noise in dBm received by the node;
+- *frequency* - frequency used by the node in Hz;
+- *lora_mode* - one of the predefined presets of modem (LongFast, MediumFast, ShortFast, ShortTurbo, etc.);
+- *role* - one of the predefined role of the mode (CLIENT, ROUTER, ROUTER_CLIENT, REPEATER, ROUTER_LATE, CLIENT_HIDDEN, CLIENT_MUTE);
+- *position_interval* - the interval between sending POSITION messages, if 0 then turned off;
+- *nodeinfo_interval* - the interval between sending NODEINFO messages, if 0 then turned off;
+- *text_message_min_interval* - the minimum interval between sending TEXT messages;
+- *text_message_max_interval* - the maximum interval between sending TEXT messages, if *text_message_min_interval* and *text_message_max_interval* both are equal to 0 then TEXT messages are turned off;
+- *debug* - true or false, more information about this node will be printed in terminal.
 
 ## Metrics explained
 The KSSM calculates some metrics that describe network parameters. These metrics are presented in plots and stored in CSV files. The metrics are:
@@ -61,6 +125,9 @@ When the node successfuly receives the message for the first time, the source's 
 12.  *forwarded* - number of messages that were forwarded by the node (the node was not the origin);
 13.  *collisions_caused* - number of collisions caused by the node's transmission activity, collisions are counted for every node affected by the collision;
 14.  *tx_cancelled* - number of times the node cancelled relaying, despite the fact the node was originally intended to relay, but heard another copy of this message;
+15.  *tx_time_sum* - the cummulative time the node spent in TX_BUSY state;
+16.  *rx_time_sum* - the cummulative time the node spent in RX_BUSY state;
+17.  *backoff_time_sum* - the cummulative time the node spent in WAITING_FOR_TX state;
 
 There are also available the plots of success rate for every node. Every other node has printed the number of received messages originated from the inspected node. Every received message has also registered the number of used hops and the average *hops away* metrics is also calculated.
 
@@ -114,7 +181,8 @@ Then the backoff time is calculated as:
 As you can see, the ROUTER and the REPEATER will retransmit the message earlier than CLIENT. In both cases, the station that received the message with lower SNR (we can assume it means the station was further from the source) will retransmit the message earlier.
 ### Message relay rules
 - ROUTER or REPEATER: relays message always,
-- CLIENT: will not relay the message if the message was heard at least two times (relayed by other stations)
+- CLIENT: will not relay the message if the message was heard at least two times (relayed by other stations),
+- ROUTER_LATE: as client, but when message is heard at least twice it does not cancel the relay but delays the relay with the longest backoff time.
 ## TODO
 * [x] tx_time
 * [x] rx_time
