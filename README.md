@@ -42,6 +42,27 @@ Options:
 - `--slowmo_factor=N` - slowdown factor of the output video file (default 5),
 - `--dpi=200` - change the DPI size of PNG and MP4 (default 200).
 
+## Metrics explained
+The KSSM calculates some metrics that describe network parameters. These metrics are presented in plots and stored in CSV files. The metrics are:
+1. *air_util* - the percentage of the time the node was in on of these states: RX_BUSY and TX_BUSY; in other words this is the percentage of the time the medium was busy;
+2. *tx_util* - the percentage of the time that the node was transmitting (TX_BUSY state);
+3. *Number of known nodes* - the number of unique source node_ids registered in received frames;
+4. *Number of messages heard* - the number of unique messages the node received;
+5. *Normalized success rate* - this metric is calculated as 
+$$normalized\_success\_rate = \frac{confirmed\_messages}{tx\_origin \cdot (number\_of\_nodes - 1)}$$
+When the node successfuly receives the message for the first time, the source's *confirmed_messages* metrics is incremented. Every message can be confirmed by all nodes (except the source node) in the map.
+6.  *rx_success* - number of successfuly ended receptions, this metric counts every received message (echos of our own, duplicates);
+7.  *rx_fail* - number of times the reception failed because of collision;
+8.  *rx_dups* - number of received duplicated messages;
+9.  *rx_unicast* - number of received messages that the node was the destination;
+10.  *tx_origin* - number of messages the node was the source;
+11.  *tx_done* - number of times the node was transmitting messages (own or relayed);
+12.  *forwarded* - number of messages that were forwarded by the node (the node was not the origin);
+13.  *collisions_caused* - number of collisions caused by the node's transmission activity, collisions are counted for every node affected by the collision;
+14.  *tx_cancelled* - number of times the node cancelled relaying, despite the fact the node was originally intended to relay, but heard another copy of this message;
+
+There are also available the plots of success rate for every node. Every other node has printed the number of received messages originated from the inspected node. Every received message has also registered the number of used hops and the average *hops away* metrics is also calculated.
+
 ## Some details explained
 ### tx_time calculation
 The time needed to transmit a message over LoRa is calculated with the method published in [Lora Modem Designer's Guide](https://github.com/meshtastic/meshtastic/blob/master/static/documents/LoRa_Design_Guide.pdf) and [Meshtastic source code](https://github.com/meshtastic/firmware/blob/1e4a0134e6ed6d455e54cd21f64232389280781b/src/mesh/RadioInterface.cpp#L201).
@@ -86,7 +107,8 @@ $$CWsize = \frac{SNR + 20}{30} \cdot (CW_{max} - CW_{min}) + CW_{min}$$
 
 Then the backoff time is calculated as:
 - for ROUTER and REPEATER: $$backoff\\_time = random(0, 2^{CWsize}) \cdot slot\\_time$$
-- for CLIENT: $$backoff\\_time = 2 CWmax \cdot slot\\_time + random(0, 2^{CWsize}) \cdot slot\\_time$$
+- for CLIENT and ROUTER_LATE (if no duplicate message was received): $$backoff\\_time = 2 CWmax \cdot slot\\_time + random(0, 2^{CWsize}) \cdot slot\\_time$$
+- for ROUTER_LATE when the message intended to relay was received more once: $$backoff\_time = 2CWmax \cdot slot\_time + 2^{CWsize} \cdot slot\_time$$
 
 As you can see, the ROUTER and the REPEATER will retransmit the message earlier than CLIENT. In both cases, the station that received the message with lower SNR (we can assume it means the station was further from the source) will retransmit the message earlier.
 ### Message relay rules
