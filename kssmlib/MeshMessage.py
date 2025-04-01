@@ -1,7 +1,7 @@
 import random
 from math import ceil
 from enum import Enum
-from LoRaConstants import *
+from kssmlib.LoRaConstants import *
 
 class MessageType(Enum):
 	"""Enum representing different types of Meshtastic messages."""

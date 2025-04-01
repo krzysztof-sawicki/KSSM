@@ -5,8 +5,8 @@ import sys
 import json
 import os
 import shutil
-import MeshConfig
-from MeshSim import MeshSim
+from kssmlib import MeshConfig
+from kssmlib.MeshSim import MeshSim
 
 if __name__ == "__main__":
 

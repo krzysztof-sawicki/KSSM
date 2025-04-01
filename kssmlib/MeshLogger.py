@@ -1,6 +1,6 @@
 import csv
 import os
-from MeshMessage import MeshMessage
+from kssmlib.MeshMessage import MeshMessage
 
 class MeshLogger:
 	def __init__(self, message_file_path="message.csv", nodes_file_path="nodes.csv", backoff_file_path = "backoff.csv"):

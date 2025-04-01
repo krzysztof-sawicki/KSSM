@@ -6,10 +6,10 @@ import copy
 import os
 import numpy.random
 from functools import cache
-from MeshMessage import MeshMessage, MessageType
-import MeshConfig
-from LoRaConstants import *
-from MeshLogger import MeshLogger
+from kssmlib.MeshMessage import MeshMessage, MessageType
+from kssmlib import MeshConfig
+from kssmlib.LoRaConstants import *
+from kssmlib.MeshLogger import MeshLogger
 
 """
 Node Role, values taken from:
