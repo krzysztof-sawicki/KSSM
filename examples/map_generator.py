@@ -12,6 +12,8 @@ NOISE_MAX = -95
 
 FREQUENCY = 869525000
 
+TYPE = "meshtastic"
+
 LORA_MODE = "MediumFast"
 
 HOP_START_MIN = 3
@@ -32,6 +34,7 @@ nodes = []
 
 for i in range(NUM_NODES):
 	n = {
+		"type":	TYPE,
 		"node_id": f"0x{random.randint(0, 0xffffffff):08x}",
 		"long_name": f"Node {i:02d}",
 		"position": [random.randint(0, X_SIZE), random.randint(0, Y_SIZE), 10],
