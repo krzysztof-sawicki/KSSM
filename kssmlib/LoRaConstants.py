@@ -3,6 +3,8 @@ import enum
 LoRaMode is equal to ModemPreset in Meshtastic's protobufs
 Values taken from:
 https://github.com/meshtastic/protobufs/blob/14ec205865592fcfa798065bb001a549fc77b438/meshtastic/config.proto#L874
+
+In the JSON description of the map, you have to use "LongFast", "MediumFast", "ShortFast" etc. format
 """
 class LoRaMode(enum.IntEnum):
 	LONG_FAST = 0
@@ -14,7 +16,7 @@ class LoRaMode(enum.IntEnum):
 	SHORT_FAST = 6
 	LONG_MODERATE = 7
 	SHORT_TURBO = 8
-	BASIC_FASTEST  = 9 #theoretical fastest mode in sub-GHz LoRa
+	CUSTOM_FASTEST  = 9 #theoretical fastest mode in sub-GHz LoRa
 
 """
 PG - Processing Gain, calculated for every modem preset and corrected by coding rate value:

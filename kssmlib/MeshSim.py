@@ -64,6 +64,8 @@ class MeshSim:
 					lora_mode = LoRaConstants.LoRaMode.LONG_MODERATE
 				elif n["lora_mode"] == 'ShortTurbo':
 					lora_mode = LoRaConstants.LoRaMode.SHORT_TURBO
+				elif n["lora_mode"] == 'CustomFastest':
+					lora_mode = LoRaConstants.LoRaMode.CUSTOM_FASTEST
 			else:
 				lora_mode = LoRaConstants.LoRaMode.MEDIUM_FAST
 			

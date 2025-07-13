@@ -28,7 +28,7 @@ class BasicMeshNode:
 				tx_power: int = 10,
 				noise_level: float = -100,
 				frequency: float = 869.525e6,
-				lora_mode: LoRaMode = LoRaMode.BASIC_FASTEST,
+				lora_mode: LoRaMode = LoRaMode.CUSTOM_FASTEST,
 				hop_start = 3,
 				text_message_min_interval: int = 2000000,
 				text_message_max_interval: int = 12000000,

@@ -104,7 +104,7 @@ The input file is JSON-encoded list of dictionaries. The elements of the diction
 - *tx_power* - the power of transmitter as a number in dBm;
 - *noise_level* - the power of noise in dBm received by the node;
 - *frequency* - frequency used by the node in Hz;
-- *lora_mode* - one of the predefined presets of modem (LongFast, MediumFast, ShortFast, ShortTurbo, etc.);
+- *lora_mode* - one of the predefined presets of modem (LongFast, MediumFast, ShortFast, ShortTurbo, etc.; check the `LoRaConstants.py` file);
 - *role* - (only *meshtastic* nodes) one of the predefined node roles (CLIENT, ROUTER, ROUTER_CLIENT, REPEATER, ROUTER_LATE, CLIENT_HIDDEN, CLIENT_MUTE);
 - *position_interval* - (only *meshtastic* nodes) the interval between sending POSITION messages, if set to 0, then feature is turned off;
 - *nodeinfo_interval* - (only *meshtastic* nodes) the interval between sending NODEINFO messages, if set to 0, then feature is turned off;
