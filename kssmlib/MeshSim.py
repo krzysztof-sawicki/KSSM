@@ -7,12 +7,15 @@ import json
 import os
 import subprocess
 import base64
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import multiprocessing as mp
 import numpy as np
 import pandas as pd
 from datetime import datetime, timezone
-from kssmlib.MeshNode import MeshNode, NodeState, Role
+from kssmlib.BasicMeshNode import BasicMeshNode
+from kssmlib.MeshtasticNode import MeshtasticNode, NodeState, Role
 from kssmlib import LoRaConstants, MeshConfig
 from kssmlib.KSSMconfig import KSSMconfig
 
@@ -37,20 +40,11 @@ class MeshSim:
 
 	def create_nodes(self):
 		for n in self.nodes_data:
-			role = Role.CLIENT
-			lora_mode = LoRaConstants.LoRaMode.MEDIUM_FAST
-			if "role" in n.keys():
-				if n["role"] == 'ROUTER':
-					role = Role.ROUTER
-				elif n["role"] == 'CLIENT_MUTE':
-					role = Role.CLIENT_MUTE
-				elif n["role"] == 'ROUTER_CLIENT':
-					role = Role.ROUTER_CLIENT
-				elif n["role"] == 'ROUTER_LATE':
-					role = Role.ROUTER_LATE
-				elif n["role"] == 'REPEATER':
-					role = Role.REPEATER
-				# every other role is treated as client
+			if "node_id" in n.keys():
+				node_id = int(n["node_id"], 16) & 0xffffffff
+			else:
+				node_id = random.getrandbits(32)
+			
 			if "lora_mode" in n.keys():
 				if n["lora_mode"] == 'MediumFast':
 					lora_mode = LoRaConstants.LoRaMode.MEDIUM_FAST
@@ -70,28 +64,74 @@ class MeshSim:
 					lora_mode = LoRaConstants.LoRaMode.LONG_MODERATE
 				elif n["lora_mode"] == 'ShortTurbo':
 					lora_mode = LoRaConstants.LoRaMode.SHORT_TURBO
-
-			node_id = int(n["node_id"], 16) & 0xffffffff
-			node = MeshNode(
-				node_id = node_id,
-				long_name = n["long_name"],
-				position = n["position"],
-				tx_power = n["tx_power"],
-				noise_level = n["noise_level"],
-				frequency = n["frequency"],
-				lora_mode = lora_mode,
-				hop_start = n["hop_start"],
-				nodeinfo_interval = n["nodeinfo_interval"] * 1000000,
-				position_interval = n["position_interval"] * 1000000,
-				text_message_min_interval = n["text_message_min_interval"] * 1000000,
-				text_message_max_interval = n["text_message_max_interval"] * 1000000,
-				neighbors = self.nodes,
-				debug = n["debug"],
-				role = role,
-				messages_csv_name = self.messages_csv_name,
-				nodes_csv_name = self.nodes_csv_name,
-				backoff_csv_name = self.backoff_csv_name
+			else:
+				lora_mode = LoRaConstants.LoRaMode.MEDIUM_FAST
+			
+			if not ("type" in n.keys()):
+				n["type"] = "meshtastic"
+			
+			if n["type"] == "basic":
+				node = BasicMeshNode(
+					node_id = node_id,
+					long_name = n["long_name"],
+					position = n["position"],
+					tx_power = n["tx_power"],
+					noise_level = n["noise_level"],
+					frequency = n["frequency"],
+					lora_mode = lora_mode,
+					hop_start = n["hop_start"],
+					text_message_min_interval = n["text_message_min_interval"] * 1000000,
+					text_message_max_interval = n["text_message_max_interval"] * 1000000,
+					neighbors = self.nodes,
+					debug = n["debug"],
+					messages_csv_name = self.messages_csv_name,
+					nodes_csv_name = self.nodes_csv_name,
+					backoff_csv_name = self.backoff_csv_name
+				)
+			elif n["type"] == "meshtastic":
+				
+				role = Role.CLIENT
+				if "role" in n.keys():
+					if n["role"] == 'ROUTER':
+						role = Role.ROUTER
+					elif n["role"] == 'CLIENT_MUTE':
+						role = Role.CLIENT_MUTE
+					elif n["role"] == 'ROUTER_CLIENT':
+						role = Role.ROUTER_CLIENT
+					elif n["role"] == 'ROUTER_LATE':
+						role = Role.ROUTER_LATE
+					elif n["role"] == 'REPEATER':
+						role = Role.REPEATER
+				
+				if not "nodeinfo_interval" in n.keys():
+					n["nodeinfo_interval"] = 0
+				if not "position_interval" in n.keys():
+					n["position_interval"] = 0
+				
+				node = MeshtasticNode(
+					node_id = node_id,
+					long_name = n["long_name"],
+					position = n["position"],
+					tx_power = n["tx_power"],
+					noise_level = n["noise_level"],
+					frequency = n["frequency"],
+					lora_mode = lora_mode,
+					hop_start = n["hop_start"],
+					nodeinfo_interval = n["nodeinfo_interval"] * 1000000,
+					position_interval = n["position_interval"] * 1000000,
+					text_message_min_interval = n["text_message_min_interval"] * 1000000,
+					text_message_max_interval = n["text_message_max_interval"] * 1000000,
+					neighbors = self.nodes,
+					debug = n["debug"],
+					role = role,
+					messages_csv_name = self.messages_csv_name,
+					nodes_csv_name = self.nodes_csv_name,
+					backoff_csv_name = self.backoff_csv_name
 			)
+				
+			else:
+				continue
+
 			print(node)
 			self.nodes.append(node)
 			self.nodes_by_id[node_id] = node
@@ -105,7 +145,7 @@ class MeshSim:
 				changedState = True
 
 		if changedState or self.config.plot_every_n_microseconds_if_state_not_changed > 0 and self.current_time % self.config.plot_every_n_microseconds_if_state_not_changed == 0:
-			print("{:12d} ".format(self.current_time), end='')
+			print("{:>10.6f} ".format(self.current_time/1000000), end='')
 			for n in self.nodes:
 				print("{:14s} ".format(str(n.state)), end='')
 			print()
@@ -409,8 +449,11 @@ class MeshSim:
 
 		html += "<table>\n"
 		html += "<tr><th>Node ID</th><th>Long Name</th><th>Position</th><th>Tx Power</th><th>Noise Level</th><th>Frequency</th><th>Lora Mode</th><th>Hop Start</th><th>Role</th><th>Position Interval</th><th>Nodeinfo Interval</th><th>Text Message Min Interval</th><th>Text Message Max Interval</th><th>Debug</th></tr>\n"
-		for node in self.nodes_data:
-			html += f"<tr><td>{node['node_id']}</td><td>{node['long_name']}</td><td>{node['position']}</td><td>{node['tx_power']}</td><td>{node['noise_level']}</td><td>{node['frequency']}</td><td>{node['lora_mode']}</td><td>{node['hop_start']}</td><td>{node['role']}</td><td>{node['position_interval']}</td><td>{node['nodeinfo_interval']}</td><td>{node['text_message_min_interval']}</td><td>{node['text_message_max_interval']}</td><td>{node['debug']}</td></tr>\n"
+		for node in self.nodes:
+			if isinstance(node, MeshtasticNode):
+				html += f"<tr><td>{node.node_id}</td><td>{node.long_name}</td><td>{node.position}</td><td>{node.tx_power}</td><td>{node.noise_level}</td><td>{node.frequency}</td><td>{node.lora_mode}</td><td>{node.hop_start}</td><td>{node.role}</td><td>{node.position_interval}</td><td>{node.nodeinfo_interval}</td><td>{node.text_message_min_interval}</td><td>{node.text_message_max_interval}</td><td>{node.debug}</td></tr>\n"
+			else:
+				html += f"<tr><td>{node.node_id}</td><td>{node.long_name}</td><td>{node.position}</td><td>{node.tx_power}</td><td>{node.noise_level}</td><td>{node.frequency}</td><td>{node.lora_mode}</td><td>{node.hop_start}</td><td>{node.role}</td><td>-</td><td>-</td><td>{node.text_message_min_interval}</td><td>{node.text_message_max_interval}</td><td>{node.debug}</td></tr>\n"
 		html += "</table>"
 		html += '<p>' + embed_image('nodes_map.png') + '</p>'
 
@@ -420,7 +463,7 @@ class MeshSim:
 		last_rows = df.groupby('node_id').last().reset_index()
 		html += last_rows.to_html(index=False, justify='center')
 
-		result_pngs = ['air_stat.png', 'air_util.png', 'tx_stat.png', 'tx_util.png', 'known_nodes.png', 'messages_heard.png', 'normalized_success_rate.png']
+		result_pngs = ['air_stat.png', 'air_util.png', 'rx_stat.png', 'tx_stat.png', 'tx_util.png', 'known_nodes.png', 'messages_heard.png', 'normalized_success_rate.png']
 		for p in result_pngs:
 			html += '<p>' + embed_image(p) + '</p>'
 

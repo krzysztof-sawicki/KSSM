@@ -14,6 +14,7 @@ class LoRaMode(enum.IntEnum):
 	SHORT_FAST = 6
 	LONG_MODERATE = 7
 	SHORT_TURBO = 8
+	BASIC_FASTEST  = 9 #theoretical fastest mode in sub-GHz LoRa
 
 """
 PG - Processing Gain, calculated for every modem preset and corrected by coding rate value:
@@ -31,4 +32,5 @@ class ModemPreset:
 		{'SF':	7, 'CR': 5, 'BW': 250000, 'PG': 11.65},	#SF
 		{'SF': 11, 'CR': 8, 'BW': 125000, 'PG': 19.68},	#LM
 		{'SF':  7, 'CR': 5, 'BW': 500000, 'PG': 11.65},	#ST
+		{'SF':  5, 'CR': 5, 'BW': 500000, 'PG':  7.09}, #theoretical fastest mode in sub-GHz LoRa
 	]
