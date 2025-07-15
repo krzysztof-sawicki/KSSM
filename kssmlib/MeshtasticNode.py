@@ -74,7 +74,7 @@ class MeshtasticNode(BasicMeshNode):
 						nodes_csv_name = nodes_csv_name, backoff_csv_name = backoff_csv_name)
 
 		self.role = role
-		
+
 		self.nodeinfo_interval = nodeinfo_interval
 		if self.nodeinfo_interval > 0:
 			self.last_nodeinfo_time = random.randint(0, self.nodeinfo_interval)
@@ -199,10 +199,12 @@ class MeshtasticNode(BasicMeshNode):
 				if informing_node.node_id in self.currently_receiving.keys(): # already in the queue
 					self.currently_receiving[informing_node.node_id]["rx_time"] += step_interval
 					self.currently_receiving[informing_node.node_id]["last_heard"] = self.current_time
+					self.currently_receiving[informing_node.node_id]["signal_rssi"] = signal_rssi
+					self.currently_receiving[informing_node.node_id]["signal_snr"] = signal_snr
 				else: # new message, adding to the queue
 					if len(self.currently_receiving) != 0: #new message, but still during receiving another one
 						self.find_node_by_id(informing_node.node_id).blame_collision()
-					self.currently_receiving[informing_node.node_id] = {"rx_time": step_interval, "message": message, "last_heard": self.current_time, "collision": 0}
+					self.currently_receiving[informing_node.node_id] = {"rx_time": step_interval, "message": message, "last_heard": self.current_time, "collision": 0, "signal_rssi": signal_rssi, "signal_snr": signal_snr}
 					self.change_state(NodeState.RX_BUSY)
 
 				if len(self.currently_receiving) > 1: # collision

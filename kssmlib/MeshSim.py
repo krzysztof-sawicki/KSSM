@@ -361,15 +361,28 @@ class MeshSim:
 		for node in self.nodes:
 			if node.state == NodeState.RX_BUSY:
 				for n_id, rx in node.currently_receiving.items():
+					transparency = 0.3 + 0.7 * ((node.currently_receiving[n_id]["signal_snr"] + 20)/30)
+					if transparency > 1.0:
+						transparency = 1.0
+					l_width = int(5*transparency)
+
+					if transparency > 0.8:
+						l_color=(0,1,0,transparency)
+					elif transparency > 0.5:
+						l_color=(1,0.64,0,transparency)
+					else:
+						l_color=(1,0,0,transparency)
+
 					ax.annotate(
 						'',
 						xy=(node.position[0], node.position[1]),
 						xytext=(self.nodes_by_id[n_id].position[0], self.nodes_by_id[n_id].position[1]),
 						color='gray',
 						arrowprops=dict(
-							facecolor='gray',
+							#color='gray',
+							color=l_color,
 							shrink=0.05,
-							width=1,
+							width=l_width,
 							headwidth=5,
 							headlength=5
 						)
