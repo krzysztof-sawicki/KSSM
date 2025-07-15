@@ -1,4 +1,5 @@
 {
+	"propagation_model": "City",
 	"plot_every_n_microseconds_if_state_not_changed": 100000,
 	"plot_node_font_size": 8,
 	"plot_range_circles": true,

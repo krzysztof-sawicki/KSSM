@@ -18,9 +18,10 @@ from kssmlib.BasicMeshNode import BasicMeshNode
 from kssmlib.MeshtasticNode import MeshtasticNode, NodeState, Role
 from kssmlib import LoRaConstants, MeshConfig
 from kssmlib.KSSMconfig import KSSMconfig
+from kssmlib.MeshPropagation import MeshPropagation
 
 class MeshSim:
-	def __init__(self, nodes_data, size = (0, 1000, 0, 1000), results_dir = '.', generate_png = False, generate_mp4 = False, plot_dpi = 200):
+	def __init__(self, nodes_data, config_file, size = (0, 1000, 0, 1000), results_dir = '.', generate_png = False, generate_mp4 = False, plot_dpi = 200):
 		self.size = size # x_min, x_max, y_min, y_max
 		self.nodes_data = nodes_data
 		self.nodes = []
@@ -34,6 +35,8 @@ class MeshSim:
 		self.current_time = 0
 		self.dpi = plot_dpi
 		self.config = KSSMconfig()
+		self.config.load_config(config_file)
+		self.propagation_model = MeshPropagation(model=self.config.propagation_model)
 
 		self.create_nodes()
 		self.plot_nodes(name = self.results_dir + "/nodes_map.png")
@@ -44,7 +47,7 @@ class MeshSim:
 				node_id = int(n["node_id"], 16) & 0xffffffff
 			else:
 				node_id = random.getrandbits(32)
-			
+
 			if "lora_mode" in n.keys():
 				if n["lora_mode"] == 'MediumFast':
 					lora_mode = LoRaConstants.LoRaMode.MEDIUM_FAST
@@ -68,10 +71,10 @@ class MeshSim:
 					lora_mode = LoRaConstants.LoRaMode.CUSTOM_FASTEST
 			else:
 				lora_mode = LoRaConstants.LoRaMode.MEDIUM_FAST
-			
+
 			if not ("type" in n.keys()):
 				n["type"] = "meshtastic"
-			
+
 			if n["type"] == "basic":
 				node = BasicMeshNode(
 					node_id = node_id,
@@ -81,6 +84,7 @@ class MeshSim:
 					noise_level = n["noise_level"],
 					frequency = n["frequency"],
 					lora_mode = lora_mode,
+					propagation_model = self.propagation_model,
 					hop_start = n["hop_start"],
 					text_message_min_interval = n["text_message_min_interval"] * 1000000,
 					text_message_max_interval = n["text_message_max_interval"] * 1000000,
@@ -91,7 +95,7 @@ class MeshSim:
 					backoff_csv_name = self.backoff_csv_name
 				)
 			elif n["type"] == "meshtastic":
-				
+
 				role = Role.CLIENT
 				if "role" in n.keys():
 					if n["role"] == 'ROUTER':
@@ -104,12 +108,12 @@ class MeshSim:
 						role = Role.ROUTER_LATE
 					elif n["role"] == 'REPEATER':
 						role = Role.REPEATER
-				
+
 				if not "nodeinfo_interval" in n.keys():
 					n["nodeinfo_interval"] = 0
 				if not "position_interval" in n.keys():
 					n["position_interval"] = 0
-				
+
 				node = MeshtasticNode(
 					node_id = node_id,
 					long_name = n["long_name"],
@@ -118,6 +122,7 @@ class MeshSim:
 					noise_level = n["noise_level"],
 					frequency = n["frequency"],
 					lora_mode = lora_mode,
+					propagation_model = self.propagation_model,
 					hop_start = n["hop_start"],
 					nodeinfo_interval = n["nodeinfo_interval"] * 1000000,
 					position_interval = n["position_interval"] * 1000000,
@@ -130,7 +135,7 @@ class MeshSim:
 					nodes_csv_name = self.nodes_csv_name,
 					backoff_csv_name = self.backoff_csv_name
 			)
-				
+
 			else:
 				continue
 

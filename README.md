@@ -4,7 +4,7 @@
 
 KSSM is yet another mesh network simulator, but its goal is to demonstrate how mesh networks work. KSSM tries to imitate LoRa mesh networks, especially the [Meshtastic network](https://meshtastic.org/).
 
-Why another simulator? Because I can :-)
+Another simulator?! Why?! Because I can :-)
 
 This is a very early version. Many features are not well thought out yet. It may (or may not) evolve over time.
 
@@ -14,11 +14,12 @@ This is a very early version. Many features are not well thought out yet. It may
 - For the moment, you should create scenarios with nodes of the same type and with the same radio parameters;
 - Meshtastic nodes can work in modes: CLIENT, CLIENT_MUTE, CLIENT_HIDDEN, ROUTER, ROUTER_CLIENT (although it is deprecated), REPEATER, ROUTER_LATE; all other modes will work as a CLIENT;
 - Nodes can work in one of these presets: LONG_FAST, LONG_SLOW, VERY_LONG_SLOW (despite it is deprecated), MEDIUM_SLOW, MEDIUM_FAST, SHORT_SLOW, SHORT_FAST, LONG_MODERATE, SHORT_TURBO;
+- There is also available CUSTOM_FASTEST preset that is currently the fastest theoretical mode in LoRa;
 - Nodes generate messages with very random length;
 - CSMA/CA algorithm, based on values used by real Meshtastic nodes;
 - The best possible time resolution is 1 µs, the default time resolution is 1 ms;
 - Simple collision detection;
-- Very simple propagation model;
+- Four propagation models (FPSL and three variants of Okumura-Hata model);
 - Station "range" is calculated with processing gain, so different Modem Presets result in different range;
 - Output results: charts and nodes' states visualization (png), network state animation (mp4), nodes' states and message list (csv), organized in html.
 
@@ -30,6 +31,7 @@ This is a very early version. Many features are not well thought out yet. It may
 ## Usage
 ```
 $ python3 KSSM.py --nodes_data=nodes.json 
+[--config=kssm.json]
 [--simulation_time=10]
 [--time_resolution=1000]
 [--results_dir=output_dir]
@@ -37,18 +39,23 @@ $ python3 KSSM.py --nodes_data=nodes.json
 [--mp4]
 [--slowmo_factor=5]
 [--dpi=200]
+
 ```
 Options:
 - `--nodes_data=nodes.json` - **required**, a JSON file with description of the nodes. An example JSON structure is located in the `examples` directory,
+- `--config=kssm.json` - name of the config file (default `kssm.json`),
 - `--simulation_time=N` - length of the simulation in seconds (default 10 s),
 - `--time_resolution=N` - time between the events in microseconds (default 1000 µs),
-- `--results_dir=output_dir` - path to the directory where the results will be stored (default ./kssm/),
+- `--results_dir=output_dir` - path to the directory where the results will be stored (default `./kssm/`),
 - `--png` - turns on generation of PNG files showing the current network state after every state change,
 - `--mp4` - turns on generation of an MP4 video from the PNG files (automatically turns on `--png`)
 - `--slowmo_factor=N` - slowdown factor of the output video file (default 5),
 - `--dpi=200` - change the DPI size of PNG and MP4 (default 200).
 
-## Input json structure
+## Propagation models
+There are four propagation models available - free space propagation (FSPL) and three variants of the Okumura-Hata model: open space (`OpenTerrain`), small city (`Suburban`), and large city (`City`) . The choice of model can be made by defining it in the configuration file (`--config`), under the option propagation_model. Please see the `MeshPropagation.py` file.
+
+## JSON structure with the nodes description
 ```
 [
     {
@@ -202,7 +209,7 @@ As you can see, the ROUTER and the REPEATER will retransmit the message earlier 
 * [ ] waiting for ACK (the source of the message waits for the message to be repeated by other node and may send the message again)
 * [x] AirUtil, TxUtil
 * [x] summarized bar plots at the end of simulation
-* [ ] easy way to change propagation model
+* [x] easy way to change propagation model
 * [ ] coexistence of nodes working on different frequencies and LoRa modem presets
 * [ ] a little bit more smart doing things (optimization)
 * [x] REPEATER

@@ -39,6 +39,7 @@ class MeshtasticNode(BasicMeshNode):
 				noise_level: float = -100,
 				frequency: float = 869.525e6,
 				lora_mode: LoRaMode = LoRaMode.MEDIUM_FAST,
+				propagation_model = None,
 				hop_start = 3,
 				position_interval: int = 600000000,
 				nodeinfo_interval: int = 600000000,
@@ -68,7 +69,7 @@ class MeshtasticNode(BasicMeshNode):
 		:param neighbors: List of other nodes in the simulated environment
 		"""
 		super().__init__(node_id = node_id, long_name = long_name, position = position, tx_power = tx_power, noise_level = noise_level, frequency = frequency,
-						lora_mode = lora_mode, hop_start = hop_start, text_message_min_interval = text_message_min_interval,
+						lora_mode = lora_mode, propagation_model = propagation_model, hop_start = hop_start, text_message_min_interval = text_message_min_interval,
 						text_message_max_interval = text_message_max_interval, neighbors = neighbors, debug = debug, messages_csv_name = messages_csv_name,
 						nodes_csv_name = nodes_csv_name, backoff_csv_name = backoff_csv_name)
 
@@ -187,11 +188,9 @@ class MeshtasticNode(BasicMeshNode):
 		else:
 			raise Exception("Can't change the node state")
 
-
-
 	def inform(self, informing_node, message, step_interval):
-		distance = self.calculate_node_distance(informing_node)
-		signal_rssi = informing_node.tx_power - self.calculate_urban_path_loss(distance)
+		distance = self.propagation_model.calculate_distance(informing_node, self)
+		signal_rssi = informing_node.tx_power - self.propagation_model.calculate_path_loss(informing_node, self)
 		signal_snr = signal_rssi - self.noise_level
 		#self.debug(f"inform distance: {distance}\tsignal_rssi: {signal_rssi}\tsignal_snr: {signal_snr}")
 		if self.state == NodeState.IDLE or self.state == NodeState.WAITING_TO_TX or self.state == NodeState.RX_BUSY:

@@ -20,9 +20,10 @@ if __name__ == "__main__":
 	generate_png = False
 	messages_csv_name = results_dir + 'messages.csv'
 	nodes_csv_name = results_dir + 'nodes.csv'
+	config_file = 'kssm.json'
 	plot_dpi = 200
 
-	options = ["nodes_data=", "simulation_time=", "time_resolution=", "results_dir=", "png", "mp4", "slowmo_factor=", "dpi=", "help"]
+	options = ["nodes_data=", "simulation_time=", "time_resolution=", "results_dir=", "png", "mp4", "slowmo_factor=", "dpi=", "config=", "help"]
 
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], "", options)
@@ -48,6 +49,8 @@ if __name__ == "__main__":
 			slowmo_factor = int(arg)
 		elif opt == '--dpi':
 			plot_dpi = int(arg)
+		elif opt == '--config':
+			config_file = arg
 		elif opt == '--help':
 			for o in options:
 				print(f"--{o}")
@@ -84,7 +87,7 @@ if __name__ == "__main__":
 		y_min -= int(0.2*y_r)
 		y_max += int(0.2*y_r)
 
-		mesh_sim = MeshSim(nodes_data, size = (x_min, x_max, y_min, y_max), results_dir = results_dir, plot_dpi = plot_dpi, generate_png = generate_png, generate_mp4 = generate_mp4)
+		mesh_sim = MeshSim(nodes_data, config_file = config_file, size = (x_min, x_max, y_min, y_max), results_dir = results_dir, plot_dpi = plot_dpi, generate_png = generate_png, generate_mp4 = generate_mp4)
 		if generate_png:
 			mesh_sim.plot_nodes()
 		for t in range((simulation_time * 1000000)//time_resolution):

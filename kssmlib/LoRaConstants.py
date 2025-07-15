@@ -31,7 +31,7 @@ class ModemPreset:
 		{'SF': 10, 'CR': 5, 'BW': 250000, 'PG': 19.13},	#MS
 		{'SF':  9, 'CR': 5, 'BW': 250000, 'PG': 16.58},	#MF
 		{'SF':  8, 'CR': 5, 'BW': 250000, 'PG': 14.08},	#SS
-		{'SF':	7, 'CR': 5, 'BW': 250000, 'PG': 11.65},	#SF
+		{'SF':  7, 'CR': 5, 'BW': 250000, 'PG': 11.65},	#SF
 		{'SF': 11, 'CR': 8, 'BW': 125000, 'PG': 19.68},	#LM
 		{'SF':  7, 'CR': 5, 'BW': 500000, 'PG': 11.65},	#ST
 		{'SF':  5, 'CR': 5, 'BW': 500000, 'PG':  7.09}, #theoretical fastest mode in sub-GHz LoRa

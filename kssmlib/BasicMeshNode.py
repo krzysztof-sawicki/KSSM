@@ -10,6 +10,7 @@ from kssmlib.MeshMessage import MeshMessage, MessageType
 from kssmlib import MeshConfig
 from kssmlib.LoRaConstants import *
 from kssmlib.MeshLogger import MeshLogger
+from kssmlib.MeshPropagation import MeshPropagation
 
 
 class NodeState(enum.Enum):
@@ -29,6 +30,7 @@ class BasicMeshNode:
 				noise_level: float = -100,
 				frequency: float = 869.525e6,
 				lora_mode: LoRaMode = LoRaMode.CUSTOM_FASTEST,
+				propagation_model = None,
 				hop_start = 3,
 				text_message_min_interval: int = 2000000,
 				text_message_max_interval: int = 12000000,
@@ -49,6 +51,7 @@ class BasicMeshNode:
 		:param noise_level: background noise level in dBm (default -100)
 		:param frequency: Operating frequency in Hz (default 869525000)
 		:param lora_mode: LoRa modem operation mode (default MediumFast)
+		:param propagation_model: MeshPropagation object
 		:param hop_start: default hop_start value for generated messages
 		:param text_message_min_interval: minimal time before new text message is generated in µs
 		:param text_message_max_interval: maximal time before new text message is generated in µs
@@ -71,6 +74,10 @@ class BasicMeshNode:
 		self.noise_level = noise_level
 		self.frequency = frequency
 		self.lora_mode = lora_mode
+		if propagation_model is None:
+			self.propagation_model = MeshPropagation()
+		else:
+			self.propagation_model = propagation_model
 		self.debugMask = debug
 		self.hop_start = hop_start
 		if self.hop_start < 0 or self.hop_start > 7:
@@ -216,14 +223,6 @@ class BasicMeshNode:
 			return True
 		else:
 			return False
-
-	def calculate_node_distance(self, node):
-		return math.sqrt((self.position[0] - node.position[0])**2 + (self.position[1] - node.position[1])**2 + (self.position[2] - node.position[2])**2)
-
-	@cache
-	def calculate_urban_path_loss(self, distance: float) -> float:
-		path_loss_db = 20 * math.log10(self.frequency) + 30 * math.log10(distance) - 147.56
-		return round(path_loss_db, 2)
 	@cache
 	def calculate_theoretical_range(self, minimal_rx_rssi = -120):
 		exponent = (self.tx_power - minimal_rx_rssi + 147.56 - 20 * math.log10(self.frequency)) / 30
@@ -240,8 +239,8 @@ class BasicMeshNode:
 					n.inform(self, self.msg_tx_buffer, step_interval)
 
 	def inform(self, informing_node, message, step_interval):
-		distance = self.calculate_node_distance(informing_node)
-		signal_rssi = informing_node.tx_power - self.calculate_urban_path_loss(distance)
+		distance = self.propagation_model.calculate_distance(informing_node, self)
+		signal_rssi = informing_node.tx_power - self.propagation_model.calculate_path_loss(informing_node, self)
 		signal_snr = signal_rssi - self.noise_level
 		#self.debug(f"inform distance: {distance}\tsignal_rssi: {signal_rssi}\tsignal_snr: {signal_snr}")
 		if self.state == NodeState.IDLE or self.state == NodeState.WAITING_TO_TX or self.state == NodeState.RX_BUSY:
