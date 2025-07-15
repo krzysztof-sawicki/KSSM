@@ -8,6 +8,22 @@ class MeshLogger:
 		self.nodes_file_path = nodes_file_path
 		self.backoff_file_path = backoff_file_path
 		
+		self.message_file_path_descriptor = None
+		self.nodes_file_path_descriptor = None
+		self.backoff_file_path_descriptor = None
+		
+		self.message_file_writer = None
+		self.nodes_file_writer = None
+		self.backoff_file_writer = None
+	
+	def __del__(self):
+		if self.message_file_path_descriptor is not None:
+			self.message_file_path_descriptor.close()
+		if self.nodes_file_path_descriptor is not None:
+			self.nodes_file_path_descriptor.close()
+		if self.backoff_file_path_descriptor is not None:
+			self.backoff_file_path_descriptor.close()
+		
 	def log_message(self, mesh_message, tx_node, rx_node, timestamp, rssi, snr, collision, complete_reception):
 		message_id = mesh_message.message_id
 		sender_addr = mesh_message.sender_addr
@@ -38,14 +54,17 @@ class MeshLogger:
 			'complete_reception': complete_reception
 		}
 
-		file_exists = os.path.isfile(self.message_file_path)
-
-		with open(self.message_file_path, mode='a', newline='') as file:
+		if self.message_file_path_descriptor is None:
+			file_exists = os.path.isfile(self.message_file_path)
+			self.message_file_path_descriptor = open(self.message_file_path, mode='a', newline='')
 			fieldnames = log_data.keys()
-			writer = csv.DictWriter(file, fieldnames=fieldnames)
+			self.message_file_writer = csv.DictWriter(self.message_file_path_descriptor, fieldnames=fieldnames)
 			if not file_exists:
-				writer.writeheader()
-			writer.writerow(log_data)
+				self.message_file_writer.writeheader()
+				self.message_file_path_descriptor.flush()
+		
+		self.message_file_writer.writerow(log_data)
+		
 	
 	def log_node(self, node):
 		log_data = {
@@ -81,12 +100,14 @@ class MeshLogger:
 		}
 		file_exists = os.path.isfile(self.nodes_file_path)
 
-		with open(self.nodes_file_path, mode='a', newline='') as file:
+		if self.nodes_file_path_descriptor is None:
+			self.nodes_file_path_descriptor = open(self.nodes_file_path, mode='a', newline='')
 			fieldnames = log_data.keys()
-			writer = csv.DictWriter(file, fieldnames=fieldnames)
+			self.nodes_file_writer = csv.DictWriter(self.nodes_file_path_descriptor, fieldnames=fieldnames)
 			if not file_exists:
-				writer.writeheader()
-			writer.writerow(log_data)
+				self.nodes_file_writer.writeheader()
+				self.nodes_file_path_descriptor.flush()
+		self.nodes_file_writer.writerow(log_data)
 	
 	def log_backoff(self, node, rebroadcast, SNR, CWsize, calculated_backoff):
 		log_data = {
@@ -103,9 +124,11 @@ class MeshLogger:
 		}
 		file_exists = os.path.isfile(self.backoff_file_path)
 
-		with open(self.backoff_file_path, mode='a', newline='') as file:
+		if self.backoff_file_path_descriptor is None:
+			self.backoff_file_path_descriptor = open(self.backoff_file_path, mode='a', newline='')
 			fieldnames = log_data.keys()
-			writer = csv.DictWriter(file, fieldnames=fieldnames)
+			self.backoff_file_writer = csv.DictWriter(self.backoff_file_path_descriptor, fieldnames=fieldnames)
 			if not file_exists:
-				writer.writeheader()
-			writer.writerow(log_data)
+				self.backoff_file_writer.writeheader()
+				self.backoff_file_path_descriptor.flush()
+		self.backoff_file_writer.writerow(log_data)
