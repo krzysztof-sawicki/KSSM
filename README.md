@@ -178,8 +178,8 @@ To calculate the backoff time in this case we need to know the current *air util
 
 $$CWsize = \frac{airutil}{100} \cdot (CW_{max} - CW_{min}) + CW_{min}$$
 
-The backoff time is the random value from the range $$<0, 2^{CWsize}>$$ multiplied by symbol_time:
-$$backoff\\_time = random(0, 2^{CWsize}) \cdot symbol\\_time$$
+The backoff time is the random value from the range $$<0, 2^{CWsize}>$$ multiplied by slot_time:
+$$backoff\\_time = random(0, 2^{CWsize}) \cdot slot\\_time$$
 #### For relayed messages
 The backoff time for this case is calculated in two ways, depending the role of the relaying node. In both cases the backoff_time is related to SNR (signal-to-noise ratio) measured during receiving the message to be relayed. The SNR should be in range <-20, +10> and this value is mapped to the range <CWmin, CWmax>:
 
